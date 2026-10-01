@@ -1,53 +1,8 @@
 
+# The bundle image (Dockerfile: Zitadel, the themed Zitadel login, LAVIAC). Built on every branch,
+# so a Zitadel upgrade that breaks login/overrides fails before it is merged; pushed from the
+# default branch only, as :latest and :<ZITADEL_VERSION>.
 build-and-push:
-  stage: build
-  variables:
-    BUN_INSTALL_CACHE_DIR: .bun/install/cache
-    NUXT_TELEMETRY_DISABLED: "1"
-    BUILDX_NO_DEFAULT_ATTESTATIONS: "1"
-  cache:
-    key:
-      files:
-        - bun.lock
-    paths:
-      - .bun/install/cache/
-      - node_modules/
-
-  tags:
-    - glar-linux-medium-amd64
-
-  before_script:
-    # Dependencies (including devDependencies — the build step needs them)
-    - apt-get update
-    - apt-get install -y ca-certificates curl gnupg
-    - bun install --frozen-lockfile
-
-    # Docker install
-    - install -m 0755 -d /etc/apt/keyrings
-    - curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-    - chmod a+r /etc/apt/keyrings/docker.gpg
-    - . /etc/os-release
-    - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $VERSION_CODENAME stable" > /etc/apt/sources.list.d/docker.list
-    - apt-get update
-    - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin
-    - dockerd > /tmp/dockerd.log 2>&1 &
-    - sleep 5
-    - docker info || { cat /tmp/dockerd.log; exit 1; }
-
-    # Authenticate with the registry
-    - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
-
-  script:
-    - bun run build
-    - docker build -f docker/Dockerfile -t "$CI_REGISTRY_IMAGE:latest" .
-    - docker push "$CI_REGISTRY_IMAGE:latest"
-
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-
-# Zitadel login with the LeiCraft_MC theme (login/README.md). Built on every branch, so a Zitadel
-# upgrade that breaks the overrides fails before it is merged; pushed from the default branch only.
-login:
   stage: build
   image: debian:bookworm
   variables:
@@ -58,7 +13,7 @@ login:
     - glar-linux-medium-amd64
 
   before_script:
-    # Docker install (as in build-and-push)
+    # Docker install
     - apt-get update
     - apt-get install -y ca-certificates curl gnupg
     - install -m 0755 -d /etc/apt/keyrings
@@ -73,10 +28,10 @@ login:
     - docker info || { cat /tmp/dockerd.log; exit 1; }
 
   script:
-    - ZITADEL_VERSION=$(sed -n 's/^ARG ZITADEL_VERSION=//p' login/Dockerfile)
-    - docker build -t "$CI_REGISTRY_IMAGE/login:latest" -t "$CI_REGISTRY_IMAGE/login:$ZITADEL_VERSION" login
+    - ZITADEL_VERSION=$(sed -n 's/^ARG ZITADEL_VERSION=//p' Dockerfile)
+    - docker build -t "$CI_REGISTRY_IMAGE:latest" -t "$CI_REGISTRY_IMAGE:$ZITADEL_VERSION" .
     - |
       if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
         echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
-        docker push --all-tags "$CI_REGISTRY_IMAGE/login"
+        docker push --all-tags "$CI_REGISTRY_IMAGE"
       fi

@@ -18,5 +18,5 @@ for file in $files; do
 done >"$tmp"
 
 mv "$tmp" "$lock"
-echo "Updated $lock for $tag; also set ZITADEL_VERSION=$tag in login/Dockerfile."
+echo "Updated $lock for $tag; also set ZITADEL_VERSION=$tag in the Dockerfile."
 cat "$lock"

@@ -1,17 +1,13 @@
 # Zitadel login with the LeiCraft_MC theme
 
-The image is the upstream Zitadel login (`apps/login` of
-[zitadel/zitadel](https://github.com/zitadel/zitadel)) built from source at `ZITADEL_VERSION`
-([Dockerfile](Dockerfile)). Nothing is forked and no `.tsx` file is changed. The build checks out
-the upstream tag, copies [overrides/](overrides/) over it and builds it like upstream does. Every
-login flow, security fix and translation comes unchanged from upstream.
+The login in the bundle image is the upstream Zitadel login (`apps/login` of
+[zitadel/zitadel](https://github.com/zitadel/zitadel)), built from source at `ZITADEL_VERSION` in
+the `login` stage of the [Dockerfile](../Dockerfile). Nothing is forked and no `.tsx` file is
+changed. The stage checks out the upstream tag, copies [overrides/](overrides/) over it and builds
+it like upstream does. Every login flow, security fix and translation comes unchanged from upstream.
 
-```sh
-docker build -t zitadel-login-lcmc login/
-```
-
-It runs exactly like `ghcr.io/zitadel/zitadel-login` (same environment variables, port 3000, base
-path `/ui/v2/login`).
+It takes the same environment variables as `ghcr.io/zitadel/zitadel-login`. In the bundle it listens
+on port 12192 under `/ui/v2/login` (see the [README](../README.md)).
 
 ## What is replaced
 
@@ -50,7 +46,8 @@ apply to any property set there, so write every state out.
 
 ## Upgrading Zitadel
 
-1. Set `ARG ZITADEL_VERSION` in [Dockerfile](Dockerfile) to the new tag and build.
+1. Set `ARG ZITADEL_VERSION` in the [Dockerfile](../Dockerfile) to the new tag and build. Zitadel
+   and the login both use it.
 2. If upstream changed a file that is replaced, `apply-overrides.sh` fails the build and names the
    file. The same happens if upstream added a file with the same name as one of ours. Then:
    - look at the upstream change, for example
@@ -59,7 +56,9 @@ apply to any property set there, so write every state out.
    - record the new checksums: `login/upstream-checksums.sh <new tag>`.
 
    [upstream.sha256](upstream.sha256) also pins upstream's `apps/login/Dockerfile`. If it changes,
-   copy the change into the runtime stage of [Dockerfile](Dockerfile).
+   carry over changes to its environment and start command into `run_login` in
+   [docker/entrypoint.sh](../docker/entrypoint.sh). The login runs on Bun there, so upstream's
+   Node version doesn't apply.
 3. Compare screenshots of the main pages: login name, password, MFA, register, account
    selection, in light and dark. A renamed upstream class doesn't fail the build. The rule that
    used it just stops applying.

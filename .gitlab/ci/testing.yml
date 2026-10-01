@@ -1,31 +1,24 @@
 default:
-  image: oven/bun
   interruptible: true
-  cache:
-    key:
-      files:
-        - bun.lock
-    paths:
-      - .bun/install/cache/
-      - node_modules/
-  before_script:
-    - bun install --frozen-lockfile
 
-variables:
-  BUN_INSTALL_CACHE_DIR: .bun/install/cache
-  NUXT_TELEMETRY_DISABLED: "1"
+# Fast checks before the bundle build. buildpack-deps:*-scm has git, bash and GNU coreutils
+# (apply-overrides.sh uses `sha256sum --check --quiet`).
 
-test:lint:
+# login/overrides still fit the Zitadel tag of the Dockerfile (login/README.md: Upgrading Zitadel).
+test:overrides:
   stage: test
+  image: buildpack-deps:bookworm-scm
   script:
-    - bunx biome check
+    - ZITADEL_VERSION=$(sed -n 's/^ARG ZITADEL_VERSION=//p' Dockerfile)
+    - git clone --quiet --depth 1 --branch "$ZITADEL_VERSION" --filter=blob:none --sparse https://github.com/zitadel/zitadel.git /tmp/zitadel
+    - git -C /tmp/zitadel sparse-checkout set apps/login
+    - sh login/apply-overrides.sh /tmp/zitadel
 
-test:typecheck:
+test:scripts:
   stage: test
+  image: buildpack-deps:bookworm-scm
   script:
-    - bun run typecheck
-
-test:unit:
-  stage: test
-  script:
-    - bun test
+    - bash -n docker/entrypoint.sh
+    - sh -n docker/healthcheck.sh
+    - sh -n login/apply-overrides.sh
+    - sh -n login/upstream-checksums.sh
