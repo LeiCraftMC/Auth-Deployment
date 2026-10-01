@@ -1,0 +1,348 @@
+// LeiCraft_MC look for the Zitadel login (Deployment/login override, loaded last by globals.scss).
+//
+// NuxtUI v4 recipes (button, input, form field, page card) on top of the upstream markup, sized
+// like the Login-UI port (md buttons and inputs, lg IdP buttons). The rules sit outside every
+// @layer, so they beat Tailwind's utilities (all in `@layer utilities`) without !important. That
+// also means upstream's hover:/focus:/disabled:/dark: classes no longer apply to a property set
+// here, so every state is written out below.
+//
+// Colors come only from the branding (label policy) variables upstream's ThemeWrapper sets on
+// <html> (`--theme-{light|dark}-{primary|background|warn|text}-{shade}`), mapped to NuxtUI-named
+// tokens the way Login-UI's utils/branding.ts does it: every instance / organization keeps its
+// own colors, logo and font.
+//
+// Hooks: the marker classes of the `lcmc` appearance (src/lib/theme.ts: lcmc-card, lcmc-surface,
+// lcmc-button, lcmc-idp-button) and, where there is none, upstream's own classes. A renamed
+// upstream class makes a rule silently stop applying: compare screenshots after every upgrade.
+
+// ---------------------------------------------------------------------------------------------
+// Tokens
+// ---------------------------------------------------------------------------------------------
+
+:root {
+  --ui-radius: 0.25rem;
+
+  --ui-primary: var(--theme-light-primary-500);
+  --ui-on-primary: var(--theme-light-primary-contrast-500);
+  --ui-error: var(--theme-light-warn-500);
+  --ui-text-highlighted: var(--theme-light-text-500);
+  --lcmc-page-bg: var(--theme-light-background-500);
+  // the card is a lighter surface of the page background
+  --lcmc-card-lighten: 70%;
+}
+
+.dark {
+  --ui-primary: var(--theme-dark-primary-500);
+  --ui-on-primary: var(--theme-dark-primary-contrast-500);
+  --ui-error: var(--theme-dark-warn-500);
+  --ui-text-highlighted: var(--theme-dark-text-500);
+  --lcmc-page-bg: var(--theme-dark-background-500);
+  --lcmc-card-lighten: 5%;
+}
+
+// derived once; resolved on <html> with the light or dark values above
+:root {
+  --ui-bg: color-mix(in oklab, var(--lcmc-page-bg), white var(--lcmc-card-lighten));
+  --ui-bg-muted: color-mix(in oklab, var(--ui-bg), var(--ui-text-highlighted) 4%);
+  --ui-bg-elevated: color-mix(in oklab, var(--ui-bg), var(--ui-text-highlighted) 7%);
+  --ui-bg-accented: color-mix(in oklab, var(--ui-bg), var(--ui-text-highlighted) 12%);
+  --ui-border: color-mix(in oklab, var(--ui-bg), var(--ui-text-highlighted) 12%);
+  --ui-border-accented: color-mix(in oklab, var(--ui-bg), var(--ui-text-highlighted) 18%);
+
+  --ui-text: color-mix(in oklab, var(--ui-bg), var(--ui-text-highlighted) 88%);
+  --ui-text-toned: color-mix(in oklab, var(--ui-bg), var(--ui-text-highlighted) 75%);
+  --ui-text-muted: color-mix(in oklab, var(--ui-bg), var(--ui-text-highlighted) 62%);
+  --ui-text-dimmed: color-mix(in oklab, var(--ui-bg), var(--ui-text-highlighted) 48%);
+
+  --lcmc-radius-md: calc(var(--ui-radius) * 1.5);
+  --lcmc-radius-lg: calc(var(--ui-radius) * 2);
+  --lcmc-focus-primary: color-mix(in oklab, var(--ui-primary) 25%, transparent);
+  --lcmc-focus-neutral: color-mix(in oklab, var(--ui-text-highlighted) 25%, transparent);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Page and card (NuxtUI UPageCard, variant outline)
+// ---------------------------------------------------------------------------------------------
+
+// layout.tsx: the full-height page wrapper (upstream: background shade 600)
+.min-h-screen.bg-background-light-600 {
+  background-color: var(--lcmc-page-bg);
+}
+
+.lcmc-card {
+  color: var(--ui-text);
+  background-color: var(--ui-bg);
+  border: 0;
+  border-radius: var(--lcmc-radius-lg);
+  box-shadow: 0 0 0 1px var(--ui-border);
+  padding: 1.5rem;
+
+  @media (min-width: 40rem) {
+    padding: 2rem;
+  }
+
+  h1 {
+    font-weight: 600;
+    color: var(--ui-text-highlighted);
+  }
+
+  .ztdl-p {
+    color: var(--ui-text-muted);
+  }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Buttons (NuxtUI UButton, size md)
+// ---------------------------------------------------------------------------------------------
+
+button.lcmc-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  height: auto;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  border: 0;
+  border-radius: var(--lcmc-radius-md);
+  box-shadow: none;
+  transition-property: color, background-color, box-shadow;
+  transition-duration: 150ms;
+
+  &:focus-visible {
+    outline: 3px solid var(--lcmc-focus-neutral);
+    outline-offset: 0;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.75;
+  }
+
+  // secondary (upstream ButtonVariants.Secondary): color neutral, variant subtle
+  &:not(.bg-primary-light-500, .bg-warn-light-500) {
+    color: var(--ui-text);
+    background-color: var(--ui-bg-elevated);
+    box-shadow: inset 0 0 0 1px var(--ui-border-accented);
+
+    &:hover:not(:disabled),
+    &:active:not(:disabled) {
+      background-color: color-mix(in oklab, var(--ui-bg-accented) 75%, transparent);
+    }
+
+    &:focus-visible {
+      box-shadow: inset 0 0 0 1px var(--ui-text-highlighted);
+    }
+  }
+
+  // secondary with ButtonColors.Warn: color error, variant outline
+  &.text-warn-light-500 {
+    color: var(--ui-error);
+    background-color: transparent;
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ui-error) 50%, transparent);
+
+    &:hover:not(:disabled),
+    &:active:not(:disabled) {
+      background-color: color-mix(in oklab, var(--ui-error) 10%, transparent);
+    }
+  }
+
+  // primary (upstream ButtonVariants.Primary): color primary, variant solid
+  &.bg-primary-light-500 {
+    color: var(--ui-on-primary);
+    background-color: var(--ui-primary);
+
+    &:hover:not(:disabled),
+    &:active:not(:disabled) {
+      background-color: color-mix(in oklab, var(--ui-primary) 75%, transparent);
+    }
+
+    &:focus-visible {
+      outline-color: var(--lcmc-focus-primary);
+    }
+  }
+
+  // primary with ButtonColors.Warn: color error, variant solid
+  &.bg-warn-light-500 {
+    color: #fff;
+    background-color: var(--ui-error);
+
+    &:hover:not(:disabled),
+    &:active:not(:disabled) {
+      background-color: color-mix(in oklab, var(--ui-error) 75%, transparent);
+    }
+  }
+}
+
+// IdP buttons: color neutral, variant outline, size lg, min-h-12 (the logo box of the provider
+// buttons is already h-12, so no vertical padding)
+button.lcmc-idp-button {
+  min-height: 3rem;
+  gap: 0.5rem;
+  padding: 0 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--ui-text);
+  background-color: var(--ui-bg);
+  border: 0;
+  border-radius: var(--lcmc-radius-md);
+  box-shadow: inset 0 0 0 1px var(--ui-border-accented);
+  transition-property: color, background-color, box-shadow;
+  transition-duration: 150ms;
+
+  &:hover:not(:disabled),
+  &:active:not(:disabled) {
+    background-color: var(--ui-bg-elevated);
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--lcmc-focus-neutral);
+    box-shadow: inset 0 0 0 1px var(--ui-text-highlighted);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.75;
+  }
+}
+
+// "register new user" under the login name (username-form.tsx): color neutral, variant link
+button[data-testid="register-button"] {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--ui-text-muted);
+  transition-property: color;
+  transition-duration: 150ms;
+
+  &:hover:not(:disabled) {
+    color: var(--ui-text);
+  }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Text inputs (components/input.tsx: <label> > <span> label, <input>, [@suffix], <div> error)
+// NuxtUI UFormField + UInput, variant outline, size md
+// ---------------------------------------------------------------------------------------------
+
+label.text-input-light-label {
+  font-size: 0.875rem;
+  color: var(--ui-text);
+
+  // the label text; upstream colors it on error, NuxtUI keeps it
+  > span:first-child {
+    margin-bottom: 0.25rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    color: var(--ui-text);
+  }
+
+  // the error row: upstream always reserves its height, NuxtUI only shows it on error
+  > div.text-warn-light-500 {
+    height: 0;
+    overflow: hidden;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: var(--ui-error);
+  }
+
+  &:has(> span.text-warn-light-500) > div.text-warn-light-500 {
+    height: auto;
+    margin-top: 0.5rem;
+  }
+
+  // the @org-domain suffix, centered on the input (label row 1.25rem + 0.25rem gap + half of 2rem)
+  > span.z-30 {
+    top: 2.5rem;
+    bottom: auto;
+    right: 1px;
+    transform: translateY(-50%);
+    padding: 0 0.625rem;
+    font-size: 0.875rem;
+    color: var(--ui-text-muted);
+    background-color: transparent;
+  }
+}
+
+input.bg-input-light-background {
+  height: auto;
+  margin-bottom: 0;
+  padding: 0.375rem 0.625rem;
+  font-size: 1rem;
+  line-height: 1.25rem;
+  color: var(--ui-text-highlighted);
+  background-color: var(--ui-bg);
+  border: 0;
+  border-radius: var(--lcmc-radius-md);
+  box-shadow: inset 0 0 0 1px var(--ui-border-accented);
+  transition-property: color, background-color, box-shadow;
+  transition-duration: 150ms;
+
+  &::placeholder {
+    font-style: normal;
+    color: var(--ui-text-dimmed);
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--lcmc-focus-primary);
+    outline-offset: 0;
+    box-shadow: inset 0 0 0 1px var(--ui-primary);
+  }
+
+  // upstream adds its warn border classes on error: NuxtUI `highlight` with color error
+  &.border-warn-light-500 {
+    box-shadow: inset 0 0 0 1px var(--ui-error);
+
+    &:focus-visible {
+      outline-color: color-mix(in oklab, var(--ui-error) 25%, transparent);
+    }
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.75;
+  }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Language and theme switch (both get the `card` marker lcmc-surface): color neutral, subtle
+// ---------------------------------------------------------------------------------------------
+
+button.lcmc-surface {
+  line-height: 1.25rem;
+  color: var(--ui-text);
+  background-color: var(--ui-bg-elevated);
+  border: 0;
+  border-radius: var(--lcmc-radius-md);
+  box-shadow: inset 0 0 0 1px var(--ui-border-accented);
+
+  &:hover {
+    background-color: color-mix(in oklab, var(--ui-bg-accented) 75%, transparent);
+  }
+}
+
+div.lcmc-surface:not(.lcmc-card) {
+  background-color: var(--ui-bg-elevated);
+  border: 0;
+  border-radius: var(--lcmc-radius-md);
+  box-shadow: inset 0 0 0 1px var(--ui-border-accented);
+
+  > button {
+    color: var(--ui-text-muted);
+    border-radius: var(--ui-radius);
+
+    &:hover {
+      color: var(--ui-text);
+    }
+  }
+
+  // the selected mode (theme-switch.tsx, default appearance branch)
+  > button.bg-white {
+    color: var(--ui-text-highlighted);
+    background-color: var(--ui-bg-accented);
+    border: 0;
+  }
+}
