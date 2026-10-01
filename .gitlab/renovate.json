@@ -1,0 +1,11 @@
+{
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"extends": ["config:recommended"],
+	"labels": ["dependencies"],
+	"timezone": "Europe/Berlin",
+	"schedule": ["before 6am on Monday"],
+	"lockFileMaintenance": {
+		"enabled": true,
+		"schedule": ["before 6am on Monday"]
+	}
+}
