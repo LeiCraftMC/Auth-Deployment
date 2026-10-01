@@ -7,7 +7,6 @@ default:
 # login/overrides still fit the Zitadel tag of the Dockerfile (login/README.md: Upgrading Zitadel).
 test:overrides:
   stage: test
-  image: buildpack-deps:bookworm-scm
   script:
     - ZITADEL_VERSION=$(sed -n 's/^ARG ZITADEL_VERSION=//p' Dockerfile)
     - git clone --quiet --depth 1 --branch "$ZITADEL_VERSION" --filter=blob:none --sparse https://github.com/zitadel/zitadel.git /tmp/zitadel
@@ -16,7 +15,6 @@ test:overrides:
 
 test:scripts:
   stage: test
-  image: buildpack-deps:bookworm-scm
   script:
     - bash -n docker/entrypoint.sh
     - sh -n docker/healthcheck.sh

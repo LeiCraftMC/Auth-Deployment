@@ -4,7 +4,6 @@
 # default branch only, as :latest and :<ZITADEL_VERSION>.
 build-and-push:
   stage: build
-  image: debian:bookworm
   variables:
     BUILDX_NO_DEFAULT_ATTESTATIONS: "1"
   cache: []
@@ -16,6 +15,9 @@ build-and-push:
     # Docker install
     - apt-get update
     - apt-get install -y ca-certificates curl gnupg
+
+    # Docker install
+
     - install -m 0755 -d /etc/apt/keyrings
     - curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
     - chmod a+r /etc/apt/keyrings/docker.gpg
@@ -27,11 +29,15 @@ build-and-push:
     - sleep 5
     - docker info || { cat /tmp/dockerd.log; exit 1; }
 
+    # Authenticate with the registry before the build: it pulls the LAVIAC image from it. The job
+    # token can only pull it if the LAVIAC project allows this project (Settings > CI/CD > Job token
+    # permissions).
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+
   script:
     - ZITADEL_VERSION=$(sed -n 's/^ARG ZITADEL_VERSION=//p' Dockerfile)
     - docker build -t "$CI_REGISTRY_IMAGE:latest" -t "$CI_REGISTRY_IMAGE:$ZITADEL_VERSION" .
     - |
       if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
-        echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
         docker push --all-tags "$CI_REGISTRY_IMAGE"
       fi
