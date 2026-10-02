@@ -7,7 +7,7 @@
 #   docker build -t lcmc-auth .
 
 # Zitadel and its login always come from the same tag.
-ARG ZITADEL_VERSION=v4.19.2
+ARG ZITADEL_VERSION=v4.19.4
 
 FROM ghcr.io/zitadel/zitadel:${ZITADEL_VERSION} AS zitadel
 FROM gcr.leicraftmc.de/leicraftmc/auth/laviac:latest AS laviac
