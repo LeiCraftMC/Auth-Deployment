@@ -12,17 +12,17 @@ One image with everything LeiCraft_MC Auth runs ([Dockerfile](Dockerfile)):
 docker build -t lcmc-auth .
 ```
 
-[docker/entrypoint.sh](docker/entrypoint.sh) starts all three, with every log line prefixed
-`[zitadel]`, `[login]` or `[laviac]`. If one of them exits, it stops the other two and the
-container exits with that status, so the orchestrator restarts the bundle as a whole. The health
-check probes all three. The login and LAVIAC run on Bun. All three run as the same non-root user,
+supervisord ([docker/conf/services.ini](docker/conf/services.ini)) runs all three and restarts one
+that exits. All output goes to the container log, and supervisord logs every start and exit by
+process name. `docker exec <container> supervisorctl status` shows their state. The health check
+probes all three. The login and LAVIAC run on Bun. All three run as the same non-root user,
 `leicraftmc` (uid/gid 10001).
 
 ## Command
 
-The container arguments are the Zitadel command, as with the Zitadel image. The default is
-`start-from-init --masterkeyFromEnv --tlsMode external`. TLS terminates at the reverse proxy, and
-the health check expects Zitadel to speak plain HTTP.
+Zitadel always runs as `start-from-init --masterkeyFromEnv --tlsMode external`
+([docker/conf/services.ini](docker/conf/services.ini)). Container arguments are not used. TLS
+terminates at the reverse proxy, and the health check expects Zitadel to speak plain HTTP.
 
 ## Routing (reverse proxy in front)
 
@@ -38,10 +38,14 @@ All configuration comes from environment variables.
 - **Zitadel:** the usual `ZITADEL_*` settings: master key (`ZITADEL_MASTERKEY`), database, external
   domain, and the system API users for the login and LAVIAC. Enable Login V2 with the base URI
   `https://<domain>/ui/v2/login`.
-- **Login:** the variables of the Zitadel login image: `AUDIENCE`, `SYSTEM_USER_ID`,
-  `SYSTEM_USER_PRIVATE_KEY` or `SYSTEM_USER_PRIVATE_KEY_FILE`, and `ZITADEL_SESSION_COOKIE_SECRET`
-  (at least 32 characters). `ZITADEL_API_URL` defaults to the Zitadel in the container
-  (`http://localhost:8080`). `LOGIN_PORT` changes the port.
+- **Login:** the variables of the Zitadel login image, each prefixed with `LCMC_AUTH_LOGIN_`:
+  `LCMC_AUTH_LOGIN_AUDIENCE`, `LCMC_AUTH_LOGIN_SYSTEM_USER_ID`,
+  `LCMC_AUTH_LOGIN_SYSTEM_USER_PRIVATE_KEY` or `LCMC_AUTH_LOGIN_SYSTEM_USER_PRIVATE_KEY_FILE`, and
+  `LCMC_AUTH_LOGIN_ZITADEL_SESSION_COOKIE_SECRET` (at least 32 characters).
+  [docker/run-login.sh](docker/run-login.sh) removes the prefix and starts the login with only
+  these, so it doesn't see any other variable of the container. `LCMC_AUTH_LOGIN_ZITADEL_API_URL`
+  defaults to the Zitadel in the container (`http://localhost:8080`). `LCMC_AUTH_LOGIN_PORT`
+  changes the port.
 - **LAVIAC:** the `LAVIAC_*` variables of its `example.env`. Its data and config directories are
   volumes: `/opt/leicraftmc/auth/laviac/data` (SQLite) and `/opt/leicraftmc/auth/laviac/config`
   (e.g. `system-user.pem`). Bind-mounted host directories must be writable by uid 10001.

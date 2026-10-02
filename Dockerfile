@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1
 #
 # LeiCraft_MC Auth: Zitadel, the Zitadel login with the LeiCraft_MC theme and LAVIAC in one image.
-# docker/entrypoint.sh runs the three processes (README.md: ports, routing, configuration).
+# supervisord runs the three processes (docker/conf/services.ini; README.md: ports, routing,
+# configuration).
 #
 #   docker build -t lcmc-auth .
 
@@ -44,7 +45,7 @@ RUN pnpm --filter @zitadel/proto run generate \
 # --- bundle --------------------------------------------------------------------------------------
 FROM oven/bun:1-slim
 
-RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates tini \
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates tini supervisor \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --system --uid 10001 --user-group --home-dir /opt/leicraftmc/auth --shell /usr/sbin/nologin leicraftmc
 
@@ -67,7 +68,9 @@ ENV NITRO_ENV=production \
 VOLUME /opt/leicraftmc/auth/laviac/data
 VOLUME /opt/leicraftmc/auth/laviac/config
 
-COPY --chmod=0755 docker/entrypoint.sh docker/healthcheck.sh /opt/leicraftmc/auth/
+# supervisord and the login wrapper (docker/run-login.sh)
+COPY docker/conf/services.ini /etc/supervisor/supervisord.conf
+COPY --chmod=0755 docker/healthcheck.sh docker/run-login.sh /opt/leicraftmc/auth/
 
 # Zitadel 8080, login 12192 (under /ui/v2/login), LAVIAC 12191
 EXPOSE 8080/tcp 12192/tcp 12191/tcp
@@ -78,6 +81,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 USER leicraftmc
 WORKDIR /opt/leicraftmc/auth
 
-# The arguments are the Zitadel command, like with the Zitadel image.
-ENTRYPOINT ["/usr/bin/tini", "--", "/opt/leicraftmc/auth/entrypoint.sh"]
-CMD ["start-from-init", "--masterkeyFromEnv", "--tlsMode", "external"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/bin/supervisord", "--configuration", "/etc/supervisor/supervisord.conf"]

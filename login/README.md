@@ -6,8 +6,9 @@ the `login` stage of the [Dockerfile](../Dockerfile). Nothing is forked and no `
 changed. The stage checks out the upstream tag, copies [overrides/](overrides/) over it and builds
 it like upstream does. Every login flow, security fix and translation comes unchanged from upstream.
 
-It takes the same environment variables as `ghcr.io/zitadel/zitadel-login`. In the bundle it listens
-on port 12192 under `/ui/v2/login` (see the [README](../README.md)).
+It takes the same environment variables as `ghcr.io/zitadel/zitadel-login`, each prefixed with
+`LCMC_AUTH_LOGIN_` (for example `LCMC_AUTH_LOGIN_AUDIENCE`). In the bundle it listens on port 12192
+under `/ui/v2/login` (see the [README](../README.md)).
 
 ## What is replaced
 
@@ -56,8 +57,8 @@ apply to any property set there, so write every state out.
    - record the new checksums: `login/upstream-checksums.sh <new tag>`.
 
    [upstream.sha256](upstream.sha256) also pins upstream's `apps/login/Dockerfile`. If it changes,
-   carry over changes to its environment and start command into `run_login` in
-   [docker/entrypoint.sh](../docker/entrypoint.sh). The login runs on Bun there, so upstream's
+   carry over changes to its environment and start command into
+   [docker/run-login.sh](../docker/run-login.sh). The login runs on Bun there, so upstream's
    Node version doesn't apply.
 3. Compare screenshots of the main pages: login name, password, MFA, register, account
    selection, in light and dark. A renamed upstream class doesn't fail the build. The rule that

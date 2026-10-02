@@ -16,7 +16,7 @@ test:overrides:
 test:scripts:
   stage: test
   script:
-    - bash -n docker/entrypoint.sh
+    - bash -n docker/run-login.sh
     - sh -n docker/healthcheck.sh
     - sh -n login/apply-overrides.sh
     - sh -n login/upstream-checksums.sh
