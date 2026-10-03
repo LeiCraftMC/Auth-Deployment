@@ -71,7 +71,7 @@ VOLUME /opt/leicraftmc/auth/laviac/config
 
 # supervisord and the login wrapper (docker/scripts/run-login.sh)
 COPY docker/conf/services.ini /etc/supervisor/supervisord.conf
-COPY --chmod=0755 docker/scripts/healthcheck.sh docker/scripts/run-login.sh /opt/leicraftmc/auth/scripts
+COPY --chmod=0755 docker/scripts /opt/leicraftmc/auth/scripts
 
 # Zitadel 8080, login 12192 (under /ui/v2/login), LAVIAC 12191
 EXPOSE 8080/tcp 12192/tcp 12191/tcp
