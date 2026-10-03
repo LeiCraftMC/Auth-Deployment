@@ -21,17 +21,34 @@ under `/ui/v2/login` (see the [README](../README.md)).
 | `apps/login/src/lib/theme.ts` | replaced | Adds the `lcmc` appearance preset. It only adds marker classes (`lcmc-card`, `lcmc-surface`, `lcmc-button`, `lcmc-idp-button`) to the card, switches, buttons and IdP buttons. |
 | `apps/login/src/components/theme-wrapper.tsx` | replaced | One `LCMC:` line: the injected `@font-face` for the branding font declares `font-weight: 100 900`, so a uploaded **variable** font renders the medium (500) and semibold (600) the theme builds on. Without it the face registers at 400 only and 500/600 silently fall back to the built-in Lato's weights. |
 | `apps/login/src/styles/globals.scss` | replaced | Loads `_lcmc.scss` at the end. |
-| `apps/login/src/styles/_lcmc.scss` | added | The theme: NuxtUI v4 recipes (checked against the `@nuxt/ui` v4.9 sources) for buttons, inputs, form fields, the card, checkbox, alert, IdP buttons, account rows, radio tiles, dropdown and tabs. |
+| `apps/login/src/styles/_lcmc.scss` | added | The theme: NuxtUI v4 recipes (checked against the `@nuxt/ui` v4.9 sources) for buttons, inputs, form fields, the card, checkbox, alert, IdP buttons, account rows and the account pill, avatars, radio tiles and the dropdown. |
 
 `_lcmc.scss` sits outside every CSS `@layer`, so it wins over Tailwind's utility classes without
-`!important`. It never uses fixed colors. Every color comes from the branding (label policy)
-variables the login sets per instance and organization (`--theme-{light|dark}-{primary|background|warn|text}-*`).
+`!important`. Apart from the amber of warning alerts it never uses fixed colors. Every color comes
+from the branding (label policy) variables the login sets per instance and organization
+(`--theme-{light|dark}-{primary|background|warn|text}-*`).
 
 ## Branding per instance or organization
 
 Colors, logo, font and theme mode stay in the Zitadel branding settings, per instance and per
 organization. For the LeiCraft_MC look, set the instance default branding to the LeiCraft_MC colors
-and upload Rubik as the font. Organizations can still override everything.
+and upload Rubik as the font. Organizations can still override everything. Pages that don't know
+the user's organization yet (for example `/idp` or `/mfa` opened without a login name) show the
+**instance** branding, so set logo, font and colors there too, not only on the organization.
+
+How the theme uses the branding colors:
+
+| Branding color | Where it shows |
+| --- | --- |
+| Background | The card, exactly as configured (like upstream). The page behind it is the same color mixed toward black; inputs, buttons, rows and borders are steps from it toward the font color. |
+| Font | Titles, names and input text exactly; body text, labels and secondary text are the font color mixed toward the background. |
+| Primary | Primary buttons, links, focus rings, selected tiles. Text on primary buttons is upstream's computed contrast color. |
+| Warn | Errors, the end-session badge, destructive buttons. |
+
+The steps are calibrated on NuxtUI's slate palette: a dark background of slate-900 (`#0f172b`)
+with white text gives exactly the LeiCraft_MC app look (slate-900 card on a slate-950 page,
+slate-800/700 controls). A slate-950 background (`#020618`) gives a slate-950 card on a near-black
+page.
 
 **Font:** upload a **variable** font file — the Rubik VF (one file covering weights 300–900), not a
 static `Rubik-Regular.ttf`. Zitadel stores a single font file, and the LeiCraft_MC look needs real

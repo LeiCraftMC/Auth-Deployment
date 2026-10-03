@@ -1,22 +1,29 @@
 // LeiCraft_MC look for the Zitadel login (Deployment/login override, loaded last by globals.scss).
 //
 // Faithful NuxtUI v4 recipes (button, input, form field, card, checkbox, alert, dropdown, radio,
-// list rows, tabs) applied on top of the upstream markup, sized like NuxtUI's `md` controls. The
-// rules sit outside every @layer, so they beat Tailwind's utilities (all in `@layer utilities`)
-// without !important. That also means upstream's hover:/focus:/disabled:/dark: classes no longer
-// apply to a property set here, so every state is written out below.
+// list rows, avatar) applied on top of the upstream markup. Controls use NuxtUI's `xl` input
+// (40px) and `lg` button (36px) sizes, the heights upstream's own controls have. The rules sit
+// outside every @layer, so they beat Tailwind's utilities (all in `@layer utilities`) without
+// !important. That also means upstream's hover:/focus:/disabled:/dark: classes no longer apply to
+// a property set here, so every state is written out below.
 //
 // Colors come ONLY from the branding (label policy) variables upstream's ThemeWrapper sets on
 // <html> (`--theme-{light|dark}-{primary|background|warn|text}-{shade}`). Every instance /
-// organization keeps its own colors, logo and font. Nothing below hard-codes a hue.
+// organization keeps its own colors, logo and font. Nothing below hard-codes a hue, except the
+// amber of warning alerts (branding has no warning color).
+//
+// The branding background is the CARD, exactly as configured — in light and dark, like upstream
+// (which paints the card with background-500 and the page with the darker background-600). The
+// page behind it is the background mixed toward black.
 //
 // NuxtUI's neutral surfaces are steps on its `slate` palette (bg-default=slate-900, elevated=800,
 // accented=700 in dark; white/50/100/200 in light). We can't use slate (that's a fixed color), so
 // we reproduce the SAME oklab-lightness ramp by mixing the branding background toward the branding
-// text color. The mix percentages below were calibrated against slate's oklab L values, so for the
-// LeiCraft palette (background slate-950, text white) the result lands on slate-900/800/700 — but
-// any branding keeps its own hue. (Deriving from Zitadel's own `background-{400,300,200}` shades
-// was rejected: tinycolor lightens at constant saturation, which turns slate-950 into vivid navy.)
+// text color. The mix percentages below were calibrated against slate's oklab L values: with a
+// slate-900 background and white text, the result lands on slate-950 (page) / 800 / 700 and
+// 200-500 for text — but any branding keeps its own hue. (Deriving from Zitadel's own
+// `background-{400,300,200}` shades was rejected: tinycolor lightens at constant saturation,
+// which turns slate-950 into vivid navy.)
 //
 // Hooks: the marker classes of the `lcmc` appearance (src/lib/theme.ts: lcmc-card, lcmc-surface,
 // lcmc-button, lcmc-idp-button), and where there is no marker, upstream's own classes / ARIA roles
@@ -28,11 +35,11 @@
 // Tokens — NuxtUI's --ui-* design tokens, rebuilt from the branding variables.
 // ---------------------------------------------------------------------------------------------
 //
-// Per mode we set only the two anchors (--lcmc-neutral = the base surface, --ui-text-highlighted =
-// the contrast end) plus the brand colors and the per-step mix percentages; the shared block below
-// derives every surface/border/text token from them, so the single color-mix resolves correctly in
-// both modes. In dark the base is the darkest surface (the page) and we mix toward white; in light
-// the base is the lightest surface (the card) and we mix toward black.
+// Per mode we set only the two anchors (--lcmc-neutral = the branding background = the card,
+// --ui-text-highlighted = the branding text color) plus the brand colors and the per-step mix
+// percentages; the shared block below derives every surface/border/text token from them, so the
+// single color-mix resolves correctly in both modes. Surfaces mix the card toward the text color
+// (lighter in dark, darker in light); the page mixes the card toward black.
 
 :root {
   // light: base = card (branding light background, ~white); contrast = text (~black)
@@ -45,7 +52,6 @@
 
   // mix card(white) toward black — smaller steps than dark (slate's light end is compressed)
   --lcmc-p-page: 3%;
-  --lcmc-p-bg: 0%;
   --lcmc-p-muted: 1.6%;
   --lcmc-p-elevated: 3%;
   --lcmc-p-accented: 7%;
@@ -58,7 +64,7 @@
 }
 
 .dark {
-  // dark: base = page (branding dark background, ~slate-950); contrast = text (~white)
+  // dark: base = card (branding dark background, e.g. slate-900); contrast = text (~white)
   --lcmc-neutral: var(--theme-dark-background-500);
   --ui-text-highlighted: var(--theme-dark-text-500);
 
@@ -66,18 +72,18 @@
   --ui-on-primary: var(--theme-dark-primary-contrast-500);
   --ui-error: var(--theme-dark-warn-500);
 
-  // mix page(slate-950) toward white — calibrated to slate 900/800/700 and 200/300/400/500
-  --lcmc-p-page: 0%;
-  --lcmc-p-bg: 9%;
-  --lcmc-p-muted: 13%;
-  --lcmc-p-elevated: 17%;
-  --lcmc-p-accented: 28%;
-  --lcmc-p-border: 17%;
-  --lcmc-p-border-accented: 28%;
-  --lcmc-p-text: 92%;
-  --lcmc-p-text-toned: 85%;
-  --lcmc-p-text-muted: 67%;
-  --lcmc-p-text-dimmed: 49%;
+  // mix card(slate-900) toward white — calibrated to slate 800/700 and 200/300/400/500;
+  // the page toward black — slate-900 lands on slate-950
+  --lcmc-p-page: 38%;
+  --lcmc-p-muted: 4.5%;
+  --lcmc-p-elevated: 9%;
+  --lcmc-p-accented: 21%;
+  --lcmc-p-border: 9%;
+  --lcmc-p-border-accented: 21%;
+  --lcmc-p-text: 91%;
+  --lcmc-p-text-toned: 83.5%;
+  --lcmc-p-text-muted: 64%;
+  --lcmc-p-text-dimmed: 44%;
 }
 
 // Derived once; the referenced vars above change per mode, so these resolve per mode too.
@@ -88,8 +94,8 @@
   --lcmc-radius-md: calc(var(--ui-radius) * 1.5); // rounded-md — buttons, inputs
   --lcmc-radius-lg: calc(var(--ui-radius) * 2); // rounded-lg — card, alert, radio tiles
 
-  --lcmc-page-bg: color-mix(in oklab, var(--lcmc-neutral), var(--ui-text-highlighted) var(--lcmc-p-page));
-  --ui-bg: color-mix(in oklab, var(--lcmc-neutral), var(--ui-text-highlighted) var(--lcmc-p-bg));
+  --lcmc-page-bg: color-mix(in oklab, var(--lcmc-neutral), #000 var(--lcmc-p-page));
+  --ui-bg: var(--lcmc-neutral); // the card: the branding background as configured
   --ui-bg-muted: color-mix(in oklab, var(--lcmc-neutral), var(--ui-text-highlighted) var(--lcmc-p-muted));
   --ui-bg-elevated: color-mix(in oklab, var(--lcmc-neutral), var(--ui-text-highlighted) var(--lcmc-p-elevated));
   --ui-bg-accented: color-mix(in oklab, var(--lcmc-neutral), var(--ui-text-highlighted) var(--lcmc-p-accented));
@@ -123,12 +129,9 @@
 // Page and card
 // ---------------------------------------------------------------------------------------------
 
-// layout.tsx: the full-height page wrapper (upstream: bg-background-light-600 dark:bg-background-dark-600).
-// Both classes can be present; override both explicitly so the branding background is used in
-// light and dark mode. Without the dark selector, Tailwind's dark-mode utility can win in some
-// cascade conditions.
-.min-h-screen.bg-background-light-600,
-.dark .min-h-screen.bg-background-dark-600 {
+// layout.tsx: the full-height page wrapper (upstream: bg-background-light-600 dark:bg-background-dark-600,
+// both classes always present).
+.min-h-screen.bg-background-light-600 {
   background-color: var(--lcmc-page-bg);
 }
 
@@ -161,15 +164,52 @@
   // card lead (p.ztdl-p): upstream globals set text-sm; NuxtUI UAuthForm uses text-base, but on
   // the narrow login card text-base wraps too aggressively, so keep the smaller text-sm here.
   .ztdl-p {
-    margin-top: 0.25rem; // mt-1
     font-size: 0.875rem; // text-sm
     line-height: 1.25rem;
     color: var(--ui-text-muted);
   }
+
+  // title → lead: upstream's space-y-4 (16px) → closer, like UAuthForm's header (mt-1 under text-xl)
+  h1:has(+ .ztdl-p) {
+    margin-block-end: 0.5rem;
+  }
+
+  // dynamic-theme.tsx: the card's column [logo row, title block, form, empty trailing row], spaced
+  // with space-y-8 plus mb-4 on the title block. Use UAuthForm's even 24px (space-y-6) instead, and
+  // drop the rows that are empty — the logo row without a branding logo and the trailing row, which
+  // otherwise leave 32px holes above the title and under the form.
+  > .space-y-8 {
+    gap: 1.5rem;
+
+    > * {
+      margin-block: 0;
+    }
+
+    > :empty {
+      display: none;
+    }
+
+    // The title block centers its column (items-center), which shrinks it to the widest of title,
+    // lead and account pill — so the pill's width changed with the length of each page's lead text.
+    // Full width instead; the text stays centered by text-center.
+    > .text-center > * {
+      width: 100%;
+    }
+
+    // alerts come wrapped in `py-4`; at the edge of the form column that doubles the 24px gap
+    > .w-full > .py-4:first-child {
+      padding-top: 0;
+    }
+
+    > .w-full > .py-4:last-child {
+      padding-bottom: 0;
+    }
+  }
 }
 
 // Upstream caps the card container at max-w-[440px]. Widen it a bit on larger screens so forms
-// with longer labels/buttons (German, account chooser) don't feel cramped.
+// with longer labels/buttons (German, account chooser) don't feel cramped. Also matches the row
+// with the language / theme switch under the card (layout.tsx).
 .max-w-\[440px\].mx-auto {
   max-width: 26rem; // 416px on narrow screens
 
@@ -180,20 +220,27 @@
   @media (min-width: 48rem) {
     max-width: 32rem; // 512px
   }
+
+  // the switch row (px-4 md:px-8): same inset as the card container (px-4), so the switches end
+  // flush with the card's right edge
+  &.justify-end {
+    padding-inline: 1rem;
+  }
 }
 
 // ---------------------------------------------------------------------------------------------
-// Buttons (NuxtUI UButton, size md: px-2.5 py-1.5 text-sm gap-1.5 font-medium rounded-md)
+// Buttons (NuxtUI UButton, size lg: px-3 py-2 text-sm gap-2 font-medium rounded-md → 36px, the
+// height of upstream's buttons)
 // ---------------------------------------------------------------------------------------------
 
 button.lcmc-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.375rem; // gap-1.5
+  gap: 0.5rem; // gap-2
   height: auto;
   min-height: 0;
-  padding: 0.375rem 0.625rem; // py-1.5 px-2.5
+  padding: 0.5rem 0.75rem; // py-2 px-3
   font-size: 0.875rem; // text-sm
   line-height: 1.25rem;
   font-weight: 500; // font-medium
@@ -324,25 +371,38 @@ button.lcmc-button {
   }
 }
 
-// "register new user" under the login name (username-form.tsx) → NuxtUI neutral link:
-// text-muted, hover text-default, no background.
-button[data-testid="register-button"] {
-  margin-top: 0.25rem;
+// "register new user" under the login name (username-form.tsx) and "reset password" under the
+// password (password-form.tsx) → the links of the LeiCraft auth pages ("Reset here", "Sign up"):
+// text-primary, underlined on hover.
+button[data-testid="register-button"],
+button[data-testid="reset-button"] {
+  margin-top: 0.5rem;
   font-size: 0.875rem;
   line-height: 1.25rem;
   font-weight: 500;
-  color: var(--ui-text-muted);
-  transition-property: color;
-  transition-duration: 150ms;
+  color: var(--ui-primary);
+  text-underline-offset: 2px;
+  border-radius: var(--lcmc-radius-sm);
 
   &:hover:not(:disabled) {
-    color: var(--ui-text);
+    color: var(--ui-primary);
+    text-decoration-line: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ui-primary);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.75;
   }
 }
 
 // ---------------------------------------------------------------------------------------------
 // Text inputs (components/input.tsx: <label> > <span> label, <input>, [<span> suffix], <div> error)
-// NuxtUI UFormField + UInput, variant outline, size md.
+// NuxtUI UFormField + UInput, variant outline, size xl (40px, the height of upstream's inputs).
 // ---------------------------------------------------------------------------------------------
 
 label.text-input-light-label {
@@ -371,13 +431,14 @@ label.text-input-light-label {
     margin-top: 0.5rem;
   }
 
-  // the @org-domain suffix, centered on the input (label row 1.25rem + 0.25rem gap + half of ~2.25rem)
+  // the @org-domain suffix, centered on the input (label row 1.25rem + 0.25rem gap + half of 2.5rem).
+  // Upstream's translate-y-1/2 is Tailwind v4's `translate` property, so reset it, not `transform`.
   > span.z-30 {
-    top: 2.5rem;
+    top: 2.75rem;
     bottom: auto;
     right: 1px;
-    transform: translateY(-50%);
-    padding: 0 0.625rem;
+    translate: 0 -50%;
+    padding: 0 0.75rem;
     font-size: 0.875rem;
     color: var(--ui-text-muted);
     background-color: transparent;
@@ -388,9 +449,9 @@ input.bg-input-light-background {
   width: 100%;
   height: auto;
   margin-bottom: 0;
-  padding: 0.375rem 0.625rem; // py-1.5 px-2.5
-  font-size: 1rem; // text-base/5
-  line-height: 1.25rem;
+  padding: 0.5rem 0.75rem; // py-2 px-3
+  font-size: 1rem; // text-base
+  line-height: 1.5rem;
   color: var(--ui-text-highlighted);
   background-color: var(--ui-bg);
   border: 0;
@@ -484,8 +545,7 @@ input.form-checkbox {
     flex: none;
     width: 1.25rem; // h-5 w-5
     height: 1.25rem;
-    margin-left: 0;
-    margin-right: 0.5rem; // mr-2
+    margin: 0; // the gap spaces it
   }
 
   > span {
@@ -514,11 +574,11 @@ input.form-checkbox {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Theme switch + language switch button (both get the `lcmc-surface` marker) → neutral subtle.
+// Theme switch + language switch button (both get the `lcmc-surface` marker) → neutral subtle,
+// both 36px tall like the buttons (language: upstream's py-1.5 text-sm/6).
 // ---------------------------------------------------------------------------------------------
 
 button.lcmc-surface {
-  line-height: 1.25rem;
   color: var(--ui-text);
   background-color: var(--ui-bg-elevated);
   border: 0;
@@ -537,8 +597,10 @@ div.lcmc-surface:not(.lcmc-card) {
   border-radius: var(--lcmc-radius-md);
   box-shadow: inset 0 0 0 1px var(--ui-border-accented);
 
-  // the individual mode buttons
+  // the individual mode buttons (h-8 w-8 → 28px, so the p-1 shell is 36px)
   > button {
+    width: 1.75rem;
+    height: 1.75rem;
     color: var(--ui-text-muted);
     border-radius: var(--lcmc-radius-sm);
 
@@ -617,93 +679,215 @@ div.lcmc-surface:not(.lcmc-card) {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Account / session rows (session-item.tsx, session-clear-item.tsx) and self-service links —
-// all carry `border-divider-light bg-background-light-400 ... rounded-md hover:shadow-lg`.
-// → NuxtUI neutral list row: bg-elevated, 1px ring (ring-accented), hover bg-accented, no shadow.
+// List rows: account / session rows (session-item.tsx, session-clear-item.tsx), the MFA and
+// authenticator choices (auth-methods.tsx), consent scopes (consent.tsx) and self-service links —
+// all `border-divider-light bg-background-light-400 ... rounded-md border hover:shadow-lg`.
+// → NuxtUI neutral list row: bg-elevated, 1px ring (ring-accented), hover bg-accented/75, no shadow.
 // ---------------------------------------------------------------------------------------------
 
-button.border-divider-light,
-a.border-divider-light {
+.border-divider-light.bg-background-light-400 {
+  color: var(--ui-text);
   background-color: var(--ui-bg-elevated);
   border: 0;
   border-radius: var(--lcmc-radius-md);
   box-shadow: inset 0 0 0 1px var(--ui-border-accented);
   transition-property: background-color, box-shadow;
   transition-duration: 150ms;
+}
 
+button.border-divider-light.bg-background-light-400,
+a.border-divider-light.bg-background-light-400 {
   &:hover {
-    background-color: var(--ui-bg-accented);
+    background-color: color-mix(in oklab, var(--ui-bg-accented) 75%, transparent);
   }
 
   &:focus-visible {
     outline: 3px solid var(--lcmc-focus-neutral);
     outline-offset: 0;
+    box-shadow: inset 0 0 0 1px var(--ui-text-highlighted);
+  }
+}
+
+// Session rows: [avatar] [display name / login name / verified] [spacer] [end-session badge, dot].
+// Buttons center their text, so upstream showed a login name that wraps (at its hyphens) centered
+// on two lines. Every line single, left-aligned and truncated instead.
+button.border-divider-light {
+  width: 100%;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+
+  > .pr-4 {
+    flex: none;
+    padding-right: 0;
   }
 
-  // row text: upstream leaves the display name uncolored and the subtitle at opacity-80 text-xs.
-  // Force the name to text-highlighted and the metadata to text-muted so they track the theme.
-  span:not(.uppercase) {
+  > .flex-col > span {
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  // display name
+  > .flex-col > span:first-child {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 500;
     color: var(--ui-text-highlighted);
   }
 
-  span.text-xs {
+  // login name, verified / expired (upstream: opacity-80)
+  > .flex-col > span.text-xs {
     color: var(--ui-text-muted);
+    opacity: 1;
   }
 
-  // the "clear" pill on the logout chooser uses raw red; theme it to error.
-  .text-warn-light-500,
-  .dark\:text-warn-dark-500 {
+  // "end session" on the logout chooser (shown on hover, raw red upstream) → NuxtUI error badge,
+  // variant soft: bg-error/10 text-error, on one line
+  .text-warn-light-500 {
+    padding: 0.125rem 0.5rem;
+    font-weight: 500;
+    white-space: nowrap;
     color: var(--ui-error);
     background-color: color-mix(in oklab, var(--ui-error) 10%, transparent);
+    border-radius: var(--lcmc-radius-md);
+  }
+}
+
+// "Add another account" under the account list (accounts/page.tsx) → NuxtUI neutral ghost row
+// (hover bg-elevated), its icon in an elevated circle lined up with the avatars above.
+.rounded-md.px-4.py-3.hover\:bg-black\/10 {
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  font-weight: 500;
+  color: var(--ui-text-muted);
+  border-radius: var(--lcmc-radius-md);
+  transition-property: color, background-color;
+  transition-duration: 150ms;
+
+  > div:first-child {
+    margin-right: 0;
+    color: var(--ui-text);
+    background-color: var(--ui-bg-elevated);
+  }
+
+  &:hover {
+    color: var(--ui-text-highlighted);
+    background-color: var(--ui-bg-elevated);
+
+    > div:first-child {
+      background-color: var(--ui-bg-accented);
+    }
+  }
+}
+
+// TOTP setup (totp-register.tsx): the otpauth:// URI under the QR code — a fixed w-96 that
+// overflows the card on phones → NuxtUI outline input look, full width.
+.border-divider-light.w-96 {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  color: var(--ui-text);
+  background-color: var(--ui-bg);
+  border: 0;
+  border-radius: var(--lcmc-radius-md);
+  box-shadow: inset 0 0 0 1px var(--ui-border-accented);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Avatars (avatar.tsx, app-avatar.tsx — keyed on their unique `dark:text-blue` class) → NuxtUI
+// UAvatar shape: rounded-full (the `mid` roundness made them rounded squares). The per-login-name
+// colors (helpers/colors.ts) and the size stay: upstream forces it with !important utilities.
+// ---------------------------------------------------------------------------------------------
+
+.dark\:text-blue {
+  border-radius: 9999px;
+  font-weight: 600;
+
+  > img {
+    border-radius: inherit;
   }
 }
 
 // ---------------------------------------------------------------------------------------------
-// User avatar dropdown (verify page, user-avatar.tsx: flex h-full flex-row items-center border p-[1px])
-// → NuxtUI select / input look: bg-default, 1px ring (ring-accented), rounded-md.
+// Account pill on the verify pages (user-avatar.tsx: avatar, login name, spacer, chevron link to
+// the account chooser — `flex h-full flex-row items-center border p-[1px]`) → NuxtUI USelect
+// look at input size xl: 40px, bg-default, 1px ring (ring-accented). The avatar sits 4px inside
+// the ring instead of covering it, and the login name stays on one line, truncated.
 // ---------------------------------------------------------------------------------------------
 
 .h-full.flex-row.items-center.border.p-\[1px\] {
-  padding: 0;
+  gap: 0.625rem;
+  min-height: 2.5rem;
+  padding: 0.25rem;
+  text-align: left;
   color: var(--ui-text);
   background-color: var(--ui-bg);
   border: 0;
   border-radius: var(--lcmc-radius-md);
   box-shadow: inset 0 0 0 1px var(--ui-border-accented);
 
-  > span {
-    color: var(--ui-text);
+  > div:first-child {
+    display: flex;
+    flex: none;
   }
 
+  // the login name (upstream: ml-4 pr-4 max-w-[250px] text-ellipsis, but it wraps at hyphens)
+  > span:not(.flex-grow) {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
+    margin: 0;
+    padding: 0 0.5rem 0 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    color: var(--ui-text-highlighted);
+  }
+
+  // the spacer: the login name takes the free space
+  > span.flex-grow {
+    display: none;
+  }
+
+  // the chevron link to the account chooser → NuxtUI neutral ghost icon button
   > a {
+    flex: none;
+    margin: 0;
+    padding: 0.375rem;
     color: var(--ui-text-muted);
     border-radius: var(--lcmc-radius-sm);
+    transition-property: color, background-color;
+    transition-duration: 150ms;
 
     &:hover {
-      color: var(--ui-text);
+      color: var(--ui-text-highlighted);
       background-color: var(--ui-bg-elevated);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--ui-primary);
+      outline-offset: 0;
+    }
+
+    > svg {
+      width: 1.25rem;
+      height: 1.25rem;
     }
   }
 }
 
 // ---------------------------------------------------------------------------------------------
-// Tabs (tab.tsx — Next <Link>, hard-coded gray/blue upstream) → NuxtUI pill tabs:
-// inactive text-muted on bg-elevated, active text-on-primary on bg-primary.
+// Loading skeleton (skeleton.tsx, the Suspense fallback in layout.tsx) → the card's surfaces.
+// `:root .skeleton` ties with globals.scss' `.dark .skeleton` in specificity and loads later.
 // ---------------------------------------------------------------------------------------------
 
-a.bg-gray-700 {
-  color: var(--ui-text-muted);
-  background-color: var(--ui-bg-elevated);
-  border-radius: var(--lcmc-radius-md);
-
-  &:hover {
-    color: var(--ui-text);
-    background-color: var(--ui-bg-accented);
-  }
-}
-
-a.bg-blue-500 {
-  color: var(--ui-on-primary);
-  background-color: var(--ui-primary);
-  border-radius: var(--lcmc-radius-md);
+:root .skeleton {
+  --accents-1: var(--ui-bg);
+  --accents-2: var(--ui-bg-elevated);
+  border-radius: var(--lcmc-radius-lg);
+  box-shadow: 0 0 0 1px var(--ui-border);
 }
