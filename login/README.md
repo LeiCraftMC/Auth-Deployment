@@ -2,8 +2,9 @@
 
 The login in the bundle image is the upstream Zitadel login (`apps/login` of
 [zitadel/zitadel](https://github.com/zitadel/zitadel)), built from source at `ZITADEL_VERSION` in
-the `login` stage of the [Dockerfile](../docker/Dockerfile). Nothing is forked and no `.tsx` file is
-changed. The stage checks out the upstream tag, copies [overrides/](overrides/) over it and builds
+the `login` stage of the [Dockerfile](../docker/Dockerfile). Nothing is forked; the only `.tsx`
+file touched is `theme-wrapper.tsx` — one added line for font weights (table below). The stage
+checks out the upstream tag, copies [overrides/](overrides/) over it and builds
 it like upstream does. Every login flow, security fix and translation comes unchanged from upstream.
 
 It takes the same environment variables as `ghcr.io/zitadel/zitadel-login`, each prefixed with
@@ -18,8 +19,9 @@ under `/ui/v2/login` (see the [README](../README.md)).
 | --- | --- | --- |
 | `apps/login/.env.production.local` | added | Selects the theme at build time: `NEXT_PUBLIC_THEME_APPEARANCE=lcmc`, roundness, layout, spacing. |
 | `apps/login/src/lib/theme.ts` | replaced | Adds the `lcmc` appearance preset. It only adds marker classes (`lcmc-card`, `lcmc-surface`, `lcmc-button`, `lcmc-idp-button`) to the card, switches, buttons and IdP buttons. |
+| `apps/login/src/components/theme-wrapper.tsx` | replaced | One `LCMC:` line: the injected `@font-face` for the branding font declares `font-weight: 100 900`, so a uploaded **variable** font renders the medium (500) and semibold (600) the theme builds on. Without it the face registers at 400 only and 500/600 silently fall back to the built-in Lato's weights. |
 | `apps/login/src/styles/globals.scss` | replaced | Loads `_lcmc.scss` at the end. |
-| `apps/login/src/styles/_lcmc.scss` | added | The theme: NuxtUI v4 recipes for buttons, inputs, form fields and the card, sized like the Login-UI port. |
+| `apps/login/src/styles/_lcmc.scss` | added | The theme: NuxtUI v4 recipes (checked against the `@nuxt/ui` v4.9 sources) for buttons, inputs, form fields, the card, checkbox, alert, IdP buttons, account rows, radio tiles, dropdown and tabs. |
 
 `_lcmc.scss` sits outside every CSS `@layer`, so it wins over Tailwind's utility classes without
 `!important`. It never uses fixed colors. Every color comes from the branding (label policy)
@@ -30,6 +32,15 @@ variables the login sets per instance and organization (`--theme-{light|dark}-{p
 Colors, logo, font and theme mode stay in the Zitadel branding settings, per instance and per
 organization. For the LeiCraft_MC look, set the instance default branding to the LeiCraft_MC colors
 and upload Rubik as the font. Organizations can still override everything.
+
+**Font:** upload a **variable** font file — the Rubik VF (one file covering weights 300–900), not a
+static `Rubik-Regular.ttf`. Zitadel stores a single font file, and the LeiCraft_MC look needs real
+500 (buttons, labels) and 600 (headings) weights: only a variable font carries them in one file, and
+the overridden `theme-wrapper.tsx` declares the `100 900` weight range for exactly that case. A
+static upload still works, but everything renders at its single baked weight. If the font does not
+apply at all, check in the browser DevTools that the branding request's `fontUrl` is set and the
+font file loads (same origin, see the routing section of the main README) — a font configured on one
+instance does not apply to another instance's or org's login.
 
 Theme files can't change markup. Anything that needs new elements or a different structure isn't
 possible here, for example a footer with imprint and privacy links. Upstream only shows terms of

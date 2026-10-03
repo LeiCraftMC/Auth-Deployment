@@ -116,28 +116,34 @@
 }
 
 // The Card (dynamic-theme.tsx) carries both lcmc markers (background=lcmc-card, styling=lcmc-surface)
-// plus `p-6 py-8 rounded-lg`. NuxtUI UPageCard outline: bg-default, 1px ring (ring-default), rounded-lg.
+// plus `p-6 py-8 rounded-lg`. NuxtUI UPageCard outline: bg-default, 1px ring (ring-default),
+// rounded-lg, container p-4 sm:p-6 (the padding the LeiCraft auth layout's UPageCard gets).
 .lcmc-card {
   color: var(--ui-text);
   background-color: var(--ui-bg);
   border: 0;
   border-radius: var(--lcmc-radius-lg);
   box-shadow: 0 0 0 1px var(--ui-border); // ring ring-default (outset, 1px)
-  padding: 1.5rem; // p-6 — overrides upstream's p-6 py-8 for an even NuxtUI card inset
+  padding: 1rem; // p-4 — overrides upstream's p-6 py-8
 
   @media (min-width: 40rem) {
-    padding: 1.5rem;
+    padding: 1.5rem; // sm:p-6
   }
 
-  // card title (h1.ztdl-h1): NuxtUI card title = text-highlighted font-semibold
+  // card title (h1.ztdl-h1): UAuthForm title = text-xl text-pretty font-semibold text-highlighted
   h1,
   .ztdl-h1 {
+    font-size: 1.25rem; // text-xl — upstream's globals set text-2xl on it
+    line-height: 1.75rem;
     font-weight: 600;
     color: var(--ui-text-highlighted);
   }
 
-  // card lead (p.ztdl-p): NuxtUI card description = text-muted
+  // card lead (p.ztdl-p): UAuthForm description = mt-1 text-base text-pretty text-muted
   .ztdl-p {
+    margin-top: 0.25rem; // mt-1
+    font-size: 1rem; // text-base — upstream's globals set text-sm on it
+    line-height: 1.5rem;
     color: var(--ui-text-muted);
   }
 }
@@ -240,11 +246,13 @@ button.lcmc-button {
   }
 }
 
-// IdP buttons (idps/base-button.tsx) → NuxtUI neutral outline, but kept tall because the provider
-// logo box is h-12: bg-default, 1px ring (ring-accented), hover bg-elevated.
+// IdP buttons (idps/base-button.tsx) → UAuthForm renders its providers as UButton block, color
+// neutral, variant subtle — bg-elevated, 1px ring (ring-accented), hover bg-accented/75 — kept
+// tall because the provider logo box is h-12.
 .lcmc-idp-button {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   min-height: 3rem; // the h-12 logo box
   padding: 0 0.75rem;
@@ -252,7 +260,7 @@ button.lcmc-button {
   line-height: 1.25rem;
   font-weight: 500;
   color: var(--ui-text);
-  background-color: var(--ui-bg);
+  background-color: var(--ui-bg-elevated);
   border: 0;
   border-radius: var(--lcmc-radius-md);
   box-shadow: inset 0 0 0 1px var(--ui-border-accented);
@@ -261,13 +269,19 @@ button.lcmc-button {
 
   &:hover:not(:disabled),
   &:active:not(:disabled) {
-    background-color: var(--ui-bg-elevated);
+    background-color: color-mix(in oklab, var(--ui-bg-accented) 75%, transparent);
   }
 
   &:focus-visible {
     outline: 3px solid var(--lcmc-focus-neutral);
     outline-offset: 0;
     box-shadow: inset 0 0 0 1px var(--ui-text-highlighted);
+  }
+
+  // center the provider content like UButton block does (upstream's inner wrappers are flex-1
+  // and fill the button, so centering the button itself has no effect)
+  > div > div {
+    justify-content: center;
   }
 
   &:disabled {
