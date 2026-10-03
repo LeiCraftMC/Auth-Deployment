@@ -20,7 +20,7 @@ probes all three. The login and LAVIAC run on Bun. All three run as the same non
 
 ## Command
 
-Zitadel always runs as `start-from-init --masterkeyFromEnv --tlsMode external`
+Zitadel always runs as `start-from-init --masterkeyFromEnv`
 ([docker/conf/services.ini](docker/conf/services.ini)). Container arguments are not used. TLS
 terminates at the reverse proxy, and the health check expects Zitadel to speak plain HTTP.
 

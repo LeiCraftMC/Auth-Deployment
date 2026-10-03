@@ -41,3 +41,6 @@ build-and-push:
       if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
         docker push --all-tags "$CI_REGISTRY_IMAGE"
       fi
+
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
