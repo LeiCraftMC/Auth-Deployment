@@ -35,7 +35,7 @@ build-and-push:
     - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
 
   script:
-    - ZITADEL_VERSION=$(sed -n 's/^ARG ZITADEL_VERSION=//p' Dockerfile)
+    - ZITADEL_VERSION=$(sed -n 's/^ARG ZITADEL_VERSION=//p' docker/Dockerfile)
     - docker build -f docker/Dockerfile -t "$CI_REGISTRY_IMAGE:latest" -t "$CI_REGISTRY_IMAGE:$ZITADEL_VERSION" .
     - |
       if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then

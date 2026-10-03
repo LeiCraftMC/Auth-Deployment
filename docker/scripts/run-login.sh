@@ -17,6 +17,10 @@ for name in "${!LCMC_AUTH_LOGIN_@}"; do
 	login_env+=("${name#LCMC_AUTH_LOGIN_}=${!name}")
 done
 
+# The fixed assignments below (PORT, HOSTNAME, NODE_ENV, ...) are defaults, not hard overrides:
+# "${login_env[@]}" is expanded after them, and env uses the last occurrence of a repeated name.
+# So setting e.g. LCMC_AUTH_LOGIN_PORT appends a second PORT= that wins over the default here
+# (the health check probes ${LCMC_AUTH_LOGIN_PORT:-12192} to match). The same holds for HOSTNAME etc.
 exec env -i \
 	PATH="$PATH" \
 	HOME="$HOME" \
