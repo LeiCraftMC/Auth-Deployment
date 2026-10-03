@@ -2,7 +2,7 @@
 
 The login in the bundle image is the upstream Zitadel login (`apps/login` of
 [zitadel/zitadel](https://github.com/zitadel/zitadel)), built from source at `ZITADEL_VERSION` in
-the `login` stage of the [Dockerfile](../Dockerfile). Nothing is forked and no `.tsx` file is
+the `login` stage of the [Dockerfile](../docker/Dockerfile). Nothing is forked and no `.tsx` file is
 changed. The stage checks out the upstream tag, copies [overrides/](overrides/) over it and builds
 it like upstream does. Every login flow, security fix and translation comes unchanged from upstream.
 
@@ -47,7 +47,7 @@ apply to any property set there, so write every state out.
 
 ## Upgrading Zitadel
 
-1. Set `ARG ZITADEL_VERSION` in the [Dockerfile](../Dockerfile) to the new tag and build. Zitadel
+1. Set `ARG ZITADEL_VERSION` in the [Dockerfile](../docker/Dockerfile) to the new tag and build. Zitadel
    and the login both use it.
 2. If upstream changed a file that is replaced, `apply-overrides.sh` fails the build and names the
    file. The same happens if upstream added a file with the same name as one of ours. Then:
@@ -58,7 +58,7 @@ apply to any property set there, so write every state out.
 
    [upstream.sha256](upstream.sha256) also pins upstream's `apps/login/Dockerfile`. If it changes,
    carry over changes to its environment and start command into
-   [docker/run-login.sh](../docker/run-login.sh). The login runs on Bun there, so upstream's
+   [docker/scripts/run-login.sh ](../docker/scripts/run-login.sh ). The login runs on Bun there, so upstream's
    Node version doesn't apply.
 3. Compare screenshots of the main pages: login name, password, MFA, register, account
    selection, in light and dark. A renamed upstream class doesn't fail the build. The rule that

@@ -50,7 +50,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certifi
     && useradd --system --uid 10001 --user-group --home-dir /opt/leicraftmc/auth --shell /usr/sbin/nologin leicraftmc
 
 # Zitadel
-COPY --from=zitadel /app/zitadel /usr/local/bin/zitadel
+COPY --from=zitadel /app/zitadel /opt/leicraftmc/auth/zitadel/zitadel-bin
 
 # Login (upstream's standalone output: server, entrypoint.sh, ...), run on Bun like LAVIAC
 COPY --from=login --chown=leicraftmc:leicraftmc /zitadel/apps/login/.next/standalone /opt/leicraftmc/auth/login
@@ -58,25 +58,26 @@ COPY --from=login --chown=leicraftmc:leicraftmc /zitadel/apps/login/.next/standa
 # LAVIAC (settings as in its image)
 COPY --from=laviac /opt/leicraftmc/auth/laviac/app /opt/leicraftmc/auth/laviac/app
 RUN install -d -o leicraftmc -g leicraftmc /opt/leicraftmc/auth/laviac/data /opt/leicraftmc/auth/laviac/config
-ENV NITRO_ENV=production \
-    NITRO_HOST=:: \
-    NITRO_PORT=12191 \
-    LAVIAC_DB_PATH=/opt/leicraftmc/auth/laviac/data/db.sqlite \
-    LAVIAC_DB_AUTO_MIGRATE=true \
-    LAVIAC_DB_MIGRATION_DIR=/opt/leicraftmc/auth/laviac/app/drizzle/migrations \
-    LAVIAC_CONFIG_BASE_DIR=/opt/leicraftmc/auth/laviac/config
+ENV NITRO_ENV=production
+ENV NITRO_HOST=::
+ENV NITRO_PORT=12191
+ENV LAVIAC_DB_PATH=/opt/leicraftmc/auth/laviac/data/db.sqlite
+ENV LAVIAC_DB_AUTO_MIGRATE=true
+ENV LAVIAC_DB_MIGRATION_DIR=/opt/leicraftmc/auth/laviac/app/drizzle/migrations
+ENV LAVIAC_CONFIG_BASE_DIR=/opt/leicraftmc/auth/laviac/config
+
 VOLUME /opt/leicraftmc/auth/laviac/data
 VOLUME /opt/leicraftmc/auth/laviac/config
 
-# supervisord and the login wrapper (docker/run-login.sh)
+# supervisord and the login wrapper (docker/scripts/run-login.sh)
 COPY docker/conf/services.ini /etc/supervisor/supervisord.conf
-COPY --chmod=0755 docker/healthcheck.sh docker/run-login.sh /opt/leicraftmc/auth/
+COPY --chmod=0755 docker/scripts/healthcheck.sh docker/scripts/run-login.sh /opt/leicraftmc/auth/scripts
 
 # Zitadel 8080, login 12192 (under /ui/v2/login), LAVIAC 12191
 EXPOSE 8080/tcp 12192/tcp 12191/tcp
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD ["/opt/leicraftmc/auth/healthcheck.sh"]
+    CMD ["/opt/leicraftmc/auth/scripts/healthcheck.sh"]
 
 USER leicraftmc
 WORKDIR /opt/leicraftmc/auth

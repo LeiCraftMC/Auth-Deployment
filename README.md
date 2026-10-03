@@ -1,6 +1,6 @@
 # LeiCraft_MC Auth deployment
 
-One image with everything LeiCraft_MC Auth runs ([Dockerfile](Dockerfile)):
+One image with everything LeiCraft_MC Auth runs ([Dockerfile](docker/Dockerfile)):
 
 | Process | Port | Source |
 | --- | --- | --- |
@@ -42,7 +42,7 @@ All configuration comes from environment variables.
   `LCMC_AUTH_LOGIN_AUDIENCE`, `LCMC_AUTH_LOGIN_SYSTEM_USER_ID`,
   `LCMC_AUTH_LOGIN_SYSTEM_USER_PRIVATE_KEY` or `LCMC_AUTH_LOGIN_SYSTEM_USER_PRIVATE_KEY_FILE`, and
   `LCMC_AUTH_LOGIN_ZITADEL_SESSION_COOKIE_SECRET` (at least 32 characters).
-  [docker/run-login.sh](docker/run-login.sh) removes the prefix and starts the login with only
+  [docker/scripts/run-login.sh](docker/scripts/run-login.sh) removes the prefix and starts the login with only
   these, so it doesn't see any other variable of the container. `LCMC_AUTH_LOGIN_ZITADEL_API_URL`
   defaults to the Zitadel in the container (`http://localhost:8080`). `LCMC_AUTH_LOGIN_PORT`
   changes the port.
@@ -52,6 +52,6 @@ All configuration comes from environment variables.
 
 ## Updating
 
-- **Zitadel and the login:** `ARG ZITADEL_VERSION` in the [Dockerfile](Dockerfile), then follow
+- **Zitadel and the login:** `ARG ZITADEL_VERSION` in the [Dockerfile](docker/Dockerfile), then follow
   [login/README.md](login/README.md#upgrading-zitadel).
 - **LAVIAC:** comes from its `latest` image at build time.
