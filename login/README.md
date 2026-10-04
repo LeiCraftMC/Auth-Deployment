@@ -35,6 +35,9 @@ organization. For the LeiCraft_MC look, set the instance default branding to the
 and upload Rubik as the font. Organizations can still override everything. Pages that don't know
 the user's organization yet (for example `/idp` or `/mfa` opened without a login name) show the
 **instance** branding, so set logo, font and colors there too, not only on the organization.
+That is upstream behavior, the default login does the same. `/idp` lists the instance's identity
+providers the same way, so add the IdPs there too. Branding changes only show after they are
+applied ("Apply" in the console); Zitadel serves the active branding, not the preview.
 
 How the theme uses the branding colors:
 
