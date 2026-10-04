@@ -2,6 +2,3 @@ e1006e4d0f57ffbb8880c284b446ba84c0fc976d8af0de39e5361796c1e47939  apps/login/src
 290ab7d7d4a335478407db611ebde14141359cf18e7b8e8a949d1f34574cec91  apps/login/src/styles/globals.scss
 753fb9f900e886a2d0008bc2ef14e2aa6afc3ac91d8655d3aad5edca59a8ad90  apps/login/Dockerfile
 2cc8c63864c3b1d5f7624325ef57b5614fbe9ef1b010cddfbfb80a7346676eee  apps/login/src/components/theme-wrapper.tsx
-c375fd2f4ea405468aa39d2252e9d175474a17dcc0e5e5d5af6b67414799c436  apps/login/src/app/(login)/idp/page.tsx
-cf32661a57620010090f7efd78af3b507ed5bd0e4825305f9410011bc767ddb1  apps/login/src/app/(login)/u2f/page.tsx
-72e63c39aa00837b9bf183c11ce23bdc62859e1fffecf928f5b8073bd39d29a3  apps/login/src/app/(login)/mfa/page.tsx

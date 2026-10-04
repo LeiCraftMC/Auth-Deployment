@@ -3,8 +3,7 @@
 The login in the bundle image is the upstream Zitadel login (`apps/login` of
 [zitadel/zitadel](https://github.com/zitadel/zitadel)), built from source at `ZITADEL_VERSION` in
 the `login` stage of the [Dockerfile](../docker/Dockerfile). Nothing is forked; the only `.tsx`
-files touched are `theme-wrapper.tsx` (one line for font weights) and three pages that pick the
-wrong organization's branding (table below). The stage
+file touched is `theme-wrapper.tsx` — one added line for font weights (table below). The stage
 checks out the upstream tag, copies [overrides/](overrides/) over it and builds
 it like upstream does. Every login flow, security fix and translation comes unchanged from upstream.
 
@@ -21,7 +20,6 @@ under `/ui/v2/login` (see the [README](../README.md)).
 | `apps/login/.env.production.local` | added | Selects the theme at build time: `NEXT_PUBLIC_THEME_APPEARANCE=lcmc`, roundness, layout, spacing. |
 | `apps/login/src/lib/theme.ts` | replaced | Adds the `lcmc` appearance preset. It only adds marker classes (`lcmc-card`, `lcmc-surface`, `lcmc-button`, `lcmc-idp-button`) to the card, switches, buttons and IdP buttons. |
 | `apps/login/src/components/theme-wrapper.tsx` | replaced | One `LCMC:` line: the injected `@font-face` for the branding font declares `font-weight: 100 900`, so a uploaded **variable** font renders the medium (500) and semibold (600) the theme builds on. Without it the face registers at 400 only and 500/600 silently fall back to the built-in Lato's weights. |
-| `apps/login/src/app/(login)/idp/page.tsx`, `mfa/page.tsx`, `u2f/page.tsx` | replaced | `LCMC:` block: without an `organization` URL parameter these pages load the branding (and on `/idp` the identity providers) of the user's organization, else of the default organization, like `/loginname`, `/password` and `/passkey` do. Upstream fell back to the instance there, so they showed Zitadel's default look and no IdPs when only the default organization is configured. |
 | `apps/login/src/styles/globals.scss` | replaced | Loads `_lcmc.scss` at the end. |
 | `apps/login/src/styles/_lcmc.scss` | added | The theme: NuxtUI v4 recipes (checked against the `@nuxt/ui` v4.9 sources) for buttons, inputs, form fields, the card, checkbox, alert, IdP buttons, account rows and the account pill, avatars, radio tiles and the dropdown. |
 
@@ -34,15 +32,9 @@ from the branding (label policy) variables the login sets per instance and organ
 
 Colors, logo, font and theme mode stay in the Zitadel branding settings, per instance and per
 organization. For the LeiCraft_MC look, set the instance default branding to the LeiCraft_MC colors
-and upload Rubik as the font. Organizations can still override everything.
-
-Best set it on the **instance**, not only on the default organization. Upstream's pages pick the
-branding inconsistently: some (login name, password, passkey, accounts, logout, register) fall
-back to the default organization, the others use only the `organization` URL parameter and
-otherwise the instance branding. The overrides fix that for `/idp`, `/mfa` and `/u2f` (table
-above). The rest — `/mfa/set`, `/otp/*/set`, `/verify`, `/signedin`, `/logout/done` and more —
-still show Zitadel's default colors without logo and font when the branding exists on the default
-organization only.
+and upload Rubik as the font. Organizations can still override everything. Pages that don't know
+the user's organization yet (for example `/idp` or `/mfa` opened without a login name) show the
+**instance** branding, so set logo, font and colors there too, not only on the organization.
 
 How the theme uses the branding colors:
 
