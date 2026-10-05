@@ -169,10 +169,8 @@
     color: var(--ui-text-muted);
   }
 
-  // title → lead: upstream's space-y-4 (16px) → closer, like UAuthForm's header (mt-1 under text-xl)
-  h1:has(+ .ztdl-p) {
-    margin-block-end: 0.5rem;
-  }
+  // title → lead / pill spacing stays upstream's space-y-4 (16px): the LeiCraft LoginCard's title
+  // block is a flex column with gap-4, the same 16px, so no rule is needed here.
 
   // dynamic-theme.tsx: the card's column [logo row, title block, form, empty trailing row], spaced
   // with space-y-8 plus mb-4 on the title block. Use UAuthForm's even 24px (space-y-6) instead, and
@@ -511,7 +509,7 @@ input.form-checkbox {
   transition-property: background-color, box-shadow;
   transition-duration: 150ms;
 
-  &:focus,
+  // NuxtUI focuses checkboxes only on focus-visible (no outline on a mouse :focus)
   &:focus-visible {
     outline: 3px solid var(--lcmc-focus-primary);
     outline-offset: 0;
@@ -548,6 +546,9 @@ input.form-checkbox {
     margin: 0; // the gap spaces it
   }
 
+  // the message: upstream always wraps children in <span className="w-full text-sm"> (alert.tsx),
+  // so everything inside — including the OTP alert's [text][resend button] div (login-otp.tsx) —
+  // inherits text-sm from it; this rule only flips it to NuxtUI's left alignment
   > span {
     width: 100%;
     font-size: 0.875rem; // text-sm
@@ -588,6 +589,14 @@ button.lcmc-surface {
   &:hover {
     background-color: color-mix(in oklab, var(--ui-bg-accented) 75%, transparent);
   }
+
+  // NuxtUI select, neutral subtle: focus-visible ring-inverted + outline inverted/25. Without this
+  // the language button keeps upstream's data-[focus] outline — white/25, invisible on light.
+  &:focus-visible {
+    outline: 3px solid var(--lcmc-focus-neutral);
+    outline-offset: 0;
+    box-shadow: inset 0 0 0 1px var(--ui-text-highlighted);
+  }
 }
 
 // theme-switch container (div.lcmc-surface) — the segmented control shell, not the card.
@@ -597,15 +606,23 @@ div.lcmc-surface:not(.lcmc-card) {
   border-radius: var(--lcmc-radius-md);
   box-shadow: inset 0 0 0 1px var(--ui-border-accented);
 
-  // the individual mode buttons (h-8 w-8 → 28px, so the p-1 shell is 36px)
+  // the individual mode buttons (h-8 w-8 → 28px, so the p-1 shell is 36px); upstream already
+  // rounds them rounded-md (themeSwitch roundness)
   > button {
     width: 1.75rem;
     height: 1.75rem;
     color: var(--ui-text-muted);
-    border-radius: var(--lcmc-radius-sm);
+    border-radius: var(--lcmc-radius-md);
 
     &:hover {
       color: var(--ui-text);
+    }
+
+    // upstream gives the mode buttons no focus style at all; NuxtUI buttons get a
+    // focus-visible outline-3 of inverted/25
+    &:focus-visible {
+      outline: 3px solid var(--lcmc-focus-neutral);
+      outline-offset: 0;
     }
   }
 
@@ -630,17 +647,18 @@ div.lcmc-surface:not(.lcmc-card) {
   border-radius: var(--lcmc-radius-md);
   box-shadow:
     0 0 0 1px var(--ui-border),
-    0 10px 15px -3px rgb(0 0 0 / 0.2),
-    0 4px 6px -4px rgb(0 0 0 / 0.2); // ring-default + shadow-lg
+    0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1); // ring-default + shadow-lg (Tailwind v4's shadow-lg is 0.1)
 }
 
 [role="option"] {
-  border-radius: var(--lcmc-radius-sm);
+  border-radius: var(--lcmc-radius-md); // upstream's own rounded-md (button roundness)
   color: var(--ui-text);
 
+  // NuxtUI dropdown items highlight at bg-elevated/50 (data-highlighted:before:bg-elevated/50)
   &:hover,
   &[data-focus] {
-    background-color: var(--ui-bg-elevated);
+    background-color: color-mix(in oklab, var(--ui-bg-elevated) 50%, transparent);
   }
 
   > div {
@@ -797,12 +815,12 @@ button.border-divider-light {
 // ---------------------------------------------------------------------------------------------
 // Avatars (avatar.tsx, app-avatar.tsx — keyed on their unique `dark:text-blue` class) → NuxtUI
 // UAvatar shape: rounded-full (the `mid` roundness made them rounded squares). The per-login-name
-// colors (helpers/colors.ts) and the size stay: upstream forces it with !important utilities.
+// colors (helpers/colors.ts), the size and the font weight stay: upstream is font-bold on the
+// small/base sizes and font-normal on large — exactly what the LeiCraft Login-UI avatar uses.
 // ---------------------------------------------------------------------------------------------
 
 .dark\:text-blue {
   border-radius: 9999px;
-  font-weight: 600;
 
   > img {
     border-radius: inherit;
