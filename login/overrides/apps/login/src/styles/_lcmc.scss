@@ -546,11 +546,10 @@ input.form-checkbox {
     margin: 0; // the gap spaces it
   }
 
-  // the message: a <span>, except the OTP info alert (login-otp.tsx), whose content is a <div>
-  // holding [text][resend button] — cover both, or that one alert renders at the page default
-  // 16px instead of text-sm
-  > span,
-  > div {
+  // the message: upstream always wraps children in <span className="w-full text-sm"> (alert.tsx),
+  // so everything inside — including the OTP alert's [text][resend button] div (login-otp.tsx) —
+  // inherits text-sm from it; this rule only flips it to NuxtUI's left alignment
+  > span {
     width: 100%;
     font-size: 0.875rem; // text-sm
     line-height: 1.25rem;

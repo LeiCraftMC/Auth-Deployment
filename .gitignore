@@ -38,8 +38,10 @@ yarn-error.log*
 .env
 .env.*
 !.env.example
+# tracked on purpose: the login's build-time theme selector (public NEXT_PUBLIC_* values only)
+!login/overrides/apps/login/.env.production.local
 
-#Tests
+# Tests
 tmp-data-*
 
 # Backend data & config (keep examples)
