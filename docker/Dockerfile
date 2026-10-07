@@ -69,7 +69,7 @@ ENV LAVIAC_CONFIG_BASE_DIR=/opt/leicraftmc/auth/laviac/config
 VOLUME /opt/leicraftmc/auth/laviac/data
 VOLUME /opt/leicraftmc/auth/laviac/config
 
-# supervisord and the login wrapper (docker/scripts/run-login.sh)
+# supervisord and the zitadel & login wrapper (docker/scripts/run-login.sh, docker/scripts/run-zitadel.sh)
 COPY docker/conf/services.ini /etc/supervisor/supervisord.conf
 COPY --chmod=0755 docker/scripts /opt/leicraftmc/auth/scripts
 
