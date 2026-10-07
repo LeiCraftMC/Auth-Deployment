@@ -20,6 +20,7 @@ test:scripts:
   stage: test
   script:
     - bash -n docker/scripts/run-login.sh
+    - bash -n docker/scripts/run-zitadel.sh
     - sh -n docker/scripts/healthcheck.sh
     - sh -n login/apply-overrides.sh
     - sh -n login/upstream-checksums.sh
