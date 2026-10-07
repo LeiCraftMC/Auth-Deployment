@@ -20,9 +20,20 @@ probes all three. The login and LAVIAC run on Bun. All three run as the same non
 
 ## Command
 
-Zitadel always runs as `start-from-init --masterkeyFromEnv`
-([docker/conf/services.ini](docker/conf/services.ini)). Container arguments are not used. TLS
-terminates at the reverse proxy, and the health check expects Zitadel to speak plain HTTP.
+Zitadel starts through [docker/scripts/run-zitadel.sh](docker/scripts/run-zitadel.sh). Container
+arguments are not used. TLS terminates at the reverse proxy, and the health check expects Zitadel
+to speak plain HTTP.
+
+`LCMC_AUTH_ZITADEL_INITMODE` decides how the database is prepared. Both modes run on every start
+and leave an already prepared database as it is.
+
+| Mode | Runs | Database |
+| --- | --- | --- |
+| `auto` (default) | `start-from-init --masterkeyFromEnv` | Zitadel creates its user, the database and the grants with the Postgres admin login (`ZITADEL_DATABASE_POSTGRES_ADMIN_*`). |
+| `manual` | `init zitadel`, then `start-from-setup --masterkeyFromEnv` | The user and the database exist already, and the user may create schemas in the database: it owns it, or has `GRANT ALL ON DATABASE <db> TO <user>`. Zitadel only creates its schemas and tables, with the service user (`ZITADEL_DATABASE_POSTGRES_USER_*`). No admin login is needed. |
+
+Zitadel's docs call the schema step `init schema`. That name only exists after v4.19.4, and on
+v4.19.4 `init schema` runs the full init. `init zitadel` works on both.
 
 ## Routing (reverse proxy in front)
 
@@ -35,9 +46,10 @@ terminates at the reverse proxy, and the health check expects Zitadel to speak p
 
 All configuration comes from environment variables.
 
-- **Zitadel:** the usual `ZITADEL_*` settings: master key (`ZITADEL_MASTERKEY`), database, external
-  domain, and the system API users for the login and LAVIAC. Enable Login V2 with the base URI
-  `https://<domain>/ui/v2/login`.
+- **Zitadel:** the master key in `LCMC_AUTH_ZITADEL_MASTERKEY` (or `ZITADEL_MASTERKEY` if that is
+  unset), `LCMC_AUTH_ZITADEL_INITMODE` (`auto` or `manual`, see [Command](#command)), and the usual
+  `ZITADEL_*` settings: database, external domain, and the system API users for the login and
+  LAVIAC. Enable Login V2 with the base URI `https://<domain>/ui/v2/login`.
 - **Login:** the variables of the Zitadel login image, each prefixed with `LCMC_AUTH_LOGIN_`:
   `LCMC_AUTH_LOGIN_AUDIENCE`, `LCMC_AUTH_LOGIN_SYSTEM_USER_ID`,
   `LCMC_AUTH_LOGIN_SYSTEM_USER_PRIVATE_KEY` or `LCMC_AUTH_LOGIN_SYSTEM_USER_PRIVATE_KEY_FILE`, and
