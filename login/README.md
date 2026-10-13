@@ -21,7 +21,7 @@ under `/ui/v2/login` (see the [README](../README.md)).
 | `apps/login/src/lib/theme.ts` | replaced | Adds the `lcmc` appearance preset. It only adds marker classes (`lcmc-card`, `lcmc-surface`, `lcmc-button`, `lcmc-idp-button`) to the card, switches, buttons and IdP buttons. |
 | `apps/login/src/components/theme-wrapper.tsx` | replaced | One `LCMC:` line: the injected `@font-face` for the branding font declares `font-weight: 100 900`, so a uploaded **variable** font renders the medium (500) and semibold (600) the theme builds on. Without it the face registers at 400 only and 500/600 silently fall back to the built-in Lato's weights. |
 | `apps/login/src/styles/globals.scss` | replaced | Loads `_lcmc.scss` at the end. |
-| `apps/login/src/styles/_lcmc.scss` | added | The theme: NuxtUI v4 recipes (checked against the `@nuxt/ui` v4.9 sources) for buttons, inputs, form fields, the card, checkbox, alert, IdP buttons, account rows and the account pill, avatars, radio tiles and the dropdown. |
+| `apps/login/src/styles/_lcmc.scss` | added | The theme: NuxtUI v4 recipes (checked against the `@nuxt/ui` v4.9 sources) for buttons, inputs, form fields, the card, checkbox, alert, IdP buttons, account rows and the account pill, avatars, radio tiles, the dropdown and the size of the branding logo. |
 
 `_lcmc.scss` sits outside every CSS `@layer`, so it wins over Tailwind's utility classes without
 `!important`. Apart from the amber of warning alerts it never uses fixed colors. Every color comes
@@ -52,6 +52,11 @@ The steps are calibrated on NuxtUI's slate palette: a dark background of slate-9
 with white text gives exactly the LeiCraft_MC app look (slate-900 card on a slate-950 page,
 slate-800/700 controls). A slate-950 background (`#020618`) gives a slate-950 card on a near-black
 page.
+
+**Logo:** the theme fits the branding logo into a 256×64 px box and keeps its aspect ratio, so a
+square icon shows at 64 px and a wide wordmark at up to 256 px wide. Upstream renders every logo
+150 px wide instead: a square icon becomes 150 px tall and a wordmark only about 20 px. Upload an
+SVG, or a PNG at least 128 px high so it stays sharp on HiDPI screens.
 
 **Font:** upload a **variable** font file — the Rubik VF (one file covering weights 300–900), not a
 static `Rubik-Regular.ttf`. Zitadel stores a single font file, and the LeiCraft_MC look needs real

@@ -187,6 +187,19 @@
       display: none;
     }
 
+    // The branding logo (logo.tsx: one <div> per mode around <img width=150 height=150>). With
+    // Tailwind's preflight (max-width: 100%; height: auto) that renders every logo 150px WIDE: a
+    // square icon fills a 150px square and a wordmark shrinks to ~20px high. Fit it into a wide,
+    // short box instead (object-fit keeps the aspect ratio, centered): an icon renders at the 64px
+    // height, a wordmark gets up to 256px width. 64px is also an integer scale of 8x8 / 16x16 /
+    // 32x32 pixel-art logos, so their pixels stay even.
+    > .relative > div > img {
+      width: 16rem;
+      max-width: 100%;
+      height: 4rem;
+      object-fit: contain;
+    }
+
     // The title block centers its column (items-center), which shrinks it to the widest of title,
     // lead and account pill — so the pill's width changed with the length of each page's lead text.
     // Full width instead; the text stays centered by text-center.
