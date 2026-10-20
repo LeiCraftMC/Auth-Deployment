@@ -62,6 +62,13 @@ All configuration comes from environment variables.
   volumes: `/opt/leicraftmc/auth/laviac/data` (SQLite) and `/opt/leicraftmc/auth/laviac/config`
   (e.g. `system-user.pem`). Bind-mounted host directories must be writable by uid 10001.
 
+## Zitadel actions
+
+Action targets that run outside the image, on a PHP web server:
+
+- [actions/clean-username](actions/clean-username/README.md): a `username` claim with the plain
+  username, without `@orgdomain`.
+
 ## Updating
 
 - **Zitadel and the login:** `ARG ZITADEL_VERSION` in the [Dockerfile](docker/Dockerfile), then follow
