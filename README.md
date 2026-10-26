@@ -67,8 +67,9 @@ All configuration comes from environment variables.
 
 ## Zitadel actions
 
-LAVIAC answers the Zitadel actions itself (its claims webhook: `username` and `groups`, see its
-`example.env`). Left over from before:
+LAVIAC answers the Zitadel actions itself: its claims webhook (`username` and `groups`, see its
+`example.env`), whose target it keeps on every instance and syncs at startup and every 6 hours.
+Left over from before:
 
 - [actions/claims](actions/claims/README.md) (**deprecated**): the same claims as a PHP script on
   a separate web server, still used by `auth.leicraftmc.de` until it is switched to LAVIAC.

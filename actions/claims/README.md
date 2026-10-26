@@ -1,9 +1,9 @@
 # Standard claims (deprecated)
 
-> **Deprecated.** LAVIAC has the same webhook built in: the target `laviac-claims`, which every
-> instance LAVIAC provisions gets automatically, and which can be added to any other instance of
-> the Zitadel. This script only stays until `auth.leicraftmc.de` is switched over (see
-> [Switching to LAVIAC](#switching-to-laviac)), then it and its target are removed.
+> **Deprecated.** LAVIAC has the same webhook built in: the target `laviac-claims`, which LAVIAC
+> keeps on every instance of the Zitadel and which replaces this script's `clean-username-target`
+> on its own. This script only stays until `auth.leicraftmc.de` is switched over (see
+> [Switching to LAVIAC](#switching-to-laviac)), then it is removed.
 
 [zitadel-claim.php](zitadel-claim.php) is a Zitadel Actions v2 target. It adds standard OIDC
 claims to the ID token and the userinfo response, built from what Zitadel only sends in its own
@@ -35,12 +35,14 @@ It runs outside the image, on a PHP web server (PHP 8 or later). It is deployed 
    private IPs (`ZITADEL_HTTPCLIENT_DENYLIST`); keep that, or admins of any instance could point
    targets at internal services. So if the server's own resolver answers with a private address
    for that name, give the webhook another public URL in `LAVIAC_ZITADEL_CLAIMS_WEBHOOK_URL`.
-3. On `auth.leicraftmc.de` (instance `394662209440972811`), add the target `laviac-claims` (REST
-   call, timeout 10s, interrupt on error off) with the endpoint
-   `https://laviac.int.leicraftmc.de/api/v1/hooks/claims/394662209440972811`, and put it on the
-   `preuserinfo` execution in place of `clean-username-target`.
-4. Log in to an app with the `profile` scope and check `username` and `groups`. Then delete
-   `clean-username-target` and this script from the web server.
+3. LAVIAC switches the instances itself: 60 s after it starts (then every 6 hours) its
+   `syncClaims` task adds `laviac-claims` to `preuserinfo` and `preaccesstoken` of every
+   instance, and takes `clean-username-target` out of every execution and deletes it. It does
+   that only once a signed test call through the webhook URL gets the claims back; until then
+   the PHP target stays in place. The task's log is on LAVIAC's Tasks page ("Sync the claims
+   webhook").
+4. Log in to an app with the `profile` scope and check `username` and `groups`. Then delete this
+   script from the web server.
 
 ## Deploying
 
