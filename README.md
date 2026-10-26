@@ -40,7 +40,10 @@ v4.19.4 `init schema` runs the full init. `init zitadel` works on both.
 - Each instance domain (e.g. `auth.leicraftmc.de`): `/ui/v2/login/*` goes to port 12192, everything
   else to port 8080. Zitadel needs HTTP/2 cleartext (h2c) for gRPC. Keep the original `Host` header,
   or send `x-zitadel-public-host` / `x-zitadel-instance-host`.
-- LAVIAC's domain (e.g. `laviac.leicraftmc.de`): port 12191.
+- LAVIAC's domain (`laviac.int.leicraftmc.de`): port 12191.
+- LAVIAC's claims webhook, `/api/v1/hooks/` on port 12191: Zitadel calls it for every token, so it
+  needs a public URL even when the dashboard is internal. Zitadel refuses targets on localhost and
+  private IPs. Set the URL in `LAVIAC_ZITADEL_CLAIMS_WEBHOOK_URL` if it isn't on LAVIAC's domain.
 
 ## Configuration
 
@@ -64,10 +67,11 @@ All configuration comes from environment variables.
 
 ## Zitadel actions
 
-Action targets that run outside the image, on a PHP web server:
+LAVIAC answers the Zitadel actions itself (its claims webhook: `username` and `groups`, see its
+`example.env`). Left over from before:
 
-- [actions/clean-username](actions/clean-username/README.md): a `username` claim with the plain
-  username, without `@orgdomain`.
+- [actions/claims](actions/claims/README.md) (**deprecated**): the same claims as a PHP script on
+  a separate web server, still used by `auth.leicraftmc.de` until it is switched to LAVIAC.
 
 ## Updating
 
