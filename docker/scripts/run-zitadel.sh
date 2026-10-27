@@ -25,8 +25,9 @@ case "${LCMC_AUTH_ZITADEL_INITMODE:-auto}" in
 		exec "$zitadel" start-from-init --masterkeyFromEnv
 		;;
 	manual)
-		# The schema step is `init zitadel` up to v4.19.4. Later versions rename it to `init schema`
-		# and keep `zitadel` as an alias. On v4.19.4, `init schema` silently runs the full init.
+		# The schema step is `init zitadel` up to v4.20.0. Zitadel's main branch renames it to
+		# `init schema` and keeps `zitadel` as an alias. Up to v4.20.0, `init schema` silently runs
+		# the full init.
 		"$zitadel" init zitadel
 		exec "$zitadel" start-from-setup --masterkeyFromEnv
 		;;

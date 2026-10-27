@@ -32,8 +32,9 @@ and leave an already prepared database as it is.
 | `auto` (default) | `start-from-init --masterkeyFromEnv` | Zitadel creates its user, the database and the grants with the Postgres admin login (`ZITADEL_DATABASE_POSTGRES_ADMIN_*`). |
 | `manual` | `init zitadel`, then `start-from-setup --masterkeyFromEnv` | The user and the database exist already, and the user may create schemas in the database: it owns it, or has `GRANT ALL ON DATABASE <db> TO <user>`. Zitadel only creates its schemas and tables, with the service user (`ZITADEL_DATABASE_POSTGRES_USER_*`). No admin login is needed. |
 
-Zitadel's docs call the schema step `init schema`. That name only exists after v4.19.4, and on
-v4.19.4 `init schema` runs the full init. `init zitadel` works on both.
+Zitadel's docs call the schema step `init schema`. No release has that name yet (up to v4.20.0;
+it is on Zitadel's main branch, with `zitadel` kept as an alias), and up to v4.20.0
+`init schema` runs the full init. `init zitadel` works on both.
 
 ## Routing (reverse proxy in front)
 
