@@ -1,28 +1,16 @@
-# Standard claims (deprecated)
+# Claims script (deprecated)
 
 > **Deprecated.** LAVIAC has the same webhook built in: the target `laviac-claims`, which LAVIAC
 > keeps on every instance of the Zitadel and which replaces this script's `clean-username-target`
-> on its own. This script only stays until `auth.leicraftmc.de` is switched over (see
-> [Switching to LAVIAC](#switching-to-laviac)), then it is removed.
+> on its own. `auth.leicraftmc.de` has been switched over (see
+> [Switching to LAVIAC](#switching-to-laviac)); the script is not deployed anymore.
 
-[zitadel-claim.php](zitadel-claim.php) is a Zitadel Actions v2 target. It adds standard OIDC
-claims to the ID token and the userinfo response, built from what Zitadel only sends in its own
-formats:
+[zitadel-claim.php](zitadel-claim.php) is a Zitadel Actions v2 target. It adds the same claims
+to the ID token and the userinfo response as LAVIAC's webhook: `urn:lcmc-auth:username`,
+`urn:lcmc-auth:roles` and `urn:lcmc-auth:project-roles`. What they hold, and how apps use them, is
+in [Token claims](../../README.md#token-claims).
 
-| Claim | Value | When |
-| --- | --- | --- |
-| `username` | The plain username (`alice`). `preferred_username` stays `alice@<org domain>`, because the domain policy "User login must be on domain" stays on. | The app requests the `profile` scope. |
-| `groups` | The user's role keys as a flat list (`["devops", "infra-admin"]`), from Zitadel's `urn:zitadel:iam:org:project:roles` and `urn:zitadel:iam:org:project:<id>:roles` claims. | Zitadel sends roles: the project has "Assert roles on authentication" on, or the app asks for them by scope. |
-
-Zitadel doesn't send the requested scopes to actions. The script goes by what Zitadel already put
-in the userinfo: `preferred_username` only with `profile`, the roles claims only when roles are
-asserted or requested.
-
-Apps read `groups` the usual way, for example Termix (Group Claim `groups`, Admin Group
-`<role key>`), Grafana (`groups_attribute_path = groups`, `role_attribute_path` with
-`contains(groups[*], '<role key>')`) or Portainer Business Edition (team claim `groups`).
-
-It runs outside the image, on a PHP web server (PHP 8 or later). It is deployed at
+It runs outside the image, on a PHP web server (PHP 8 or later). It was deployed at
 `https://auth.is-on.net/intactions/zitadel-claim.php`.
 
 ## Switching to LAVIAC
@@ -41,8 +29,9 @@ It runs outside the image, on a PHP web server (PHP 8 or later). It is deployed 
    that only once a signed test call through the webhook URL gets the claims back; until then
    the PHP target stays in place. The task's log is on LAVIAC's Tasks page ("Sync the claims
    webhook").
-4. Log in to an app with the `profile` scope and check `username` and `groups`. Then delete this
-   script from the web server.
+4. Log in to an app with the `profile` scope and check `urn:lcmc-auth:username`,
+   `urn:lcmc-auth:roles` and `urn:lcmc-auth:project-roles`. Then delete this script from the web
+   server.
 
 ## Deploying
 
@@ -70,7 +59,7 @@ Don't attach the target to a request or response condition, such as the response
 response with the target's answer. On `CreateCallback` that breaks every login.
 
 Apps that read claims from the ID token, not from the userinfo endpoint, need "User Info inside
-ID Token" (for `username`) and "User roles inside ID Token" (for `groups`) on. Otherwise the ID
+ID Token" (for the username) and "User roles inside ID Token" (for the roles) on. Otherwise the ID
 token lacks the claims the script builds on, and it adds nothing there.
 
 ## Calling the API with the system user

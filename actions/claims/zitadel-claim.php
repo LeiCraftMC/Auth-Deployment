@@ -3,12 +3,17 @@
 // Only kept until auth.leicraftmc.de is switched over; see README.md next to this file.
 //
 // Zitadel Actions v2 target for the function preuserinfo (see README.md next to this file).
-// Adds standard claims built from Zitadel's own:
-// - "username": the plain username (preferred_username stays username@orgdomain). Only when the
-//   "profile" scope was requested: Zitadel sends no scopes to actions, but it only puts
-//   preferred_username into the userinfo when profile was requested.
-// - "groups": the role keys of Zitadel's roles claims (urn:zitadel:iam:org:project:roles and
-//   urn:zitadel:iam:org:project:<id>:roles) as a flat list, whenever Zitadel sends roles.
+// Adds claims built from Zitadel's own, the same as LAVIAC's server/lib/zitadel/claims.ts:
+// - "urn:lcmc-auth:username": the plain username (preferred_username stays username@orgdomain).
+//   Only when the "profile" scope was requested: Zitadel sends no scopes to actions, but it only
+//   puts preferred_username into the userinfo when profile was requested.
+// - "urn:lcmc-auth:roles": the role keys of urn:zitadel:iam:org:project:roles, the app's own
+//   project, whenever Zitadel sends roles.
+// - "urn:lcmc-auth:project-roles": "<project id>:<role key>" from every
+//   urn:zitadel:iam:org:project:<id>:roles claim.
+// Roles of different projects are never merged: the same key can mean different things in two
+// projects. The names are namespaced: Zitadel drops an action's claim whose key it already set,
+// and Zitadel v5 sets "groups" from its own user groups.
 
 const MAX_AGE = 300; // seconds a signed request stays valid
 
@@ -57,26 +62,32 @@ if (!empty($userinfo['preferred_username'])) {
 		$username = substr($username, 0, -strlen($domain) - 1);
 	}
 	if ($username !== '') {
-		$claims[] = ['key' => 'username', 'value' => $username];
+		$claims[] = ['key' => 'urn:lcmc-auth:username', 'value' => $username];
 	}
 }
 
-// groups
-$groups = [];
-foreach ($userinfo as $claim => $roles) {
-	$isRolesClaim = $claim === 'urn:zitadel:iam:org:project:roles'
-		|| preg_match('/^urn:zitadel:iam:org:project:\d+:roles$/', $claim);
-	if ($isRolesClaim && is_array($roles)) {
-		foreach (array_keys($roles) as $role) {
-			// PHP turns numeric keys into ints; role keys are strings.
-			$groups[(string) $role] = true;
+// roles: the app's own project
+$own = $userinfo['urn:zitadel:iam:org:project:roles'] ?? null;
+if (is_array($own) && $own) {
+	// PHP turns numeric keys into ints; role keys are strings.
+	$roles = array_map('strval', array_keys($own));
+	sort($roles, SORT_STRING);
+	$claims[] = ['key' => 'urn:lcmc-auth:roles', 'value' => $roles];
+}
+
+// project-roles: every project, with its id. Project ids are digits, so the first ":" ends the id
+// whatever the role key holds.
+$projectRoles = [];
+foreach ($userinfo as $claim => $value) {
+	if (is_array($value) && preg_match('/^urn:zitadel:iam:org:project:(\d+):roles$/', (string) $claim, $m)) {
+		foreach (array_keys($value) as $role) {
+			$projectRoles[] = $m[1] . ':' . $role;
 		}
 	}
 }
-if ($groups) {
-	$names = array_map('strval', array_keys($groups));
-	sort($names, SORT_STRING);
-	$claims[] = ['key' => 'groups', 'value' => $names];
+if ($projectRoles) {
+	sort($projectRoles, SORT_STRING);
+	$claims[] = ['key' => 'urn:lcmc-auth:project-roles', 'value' => $projectRoles];
 }
 
 header('Content-Type: application/json');

@@ -68,12 +68,63 @@ All configuration comes from environment variables.
 
 ## Zitadel actions
 
-LAVIAC answers the Zitadel actions itself: its claims webhook (`username` and `groups`, see its
-`example.env`), whose target it keeps on every instance and syncs at startup and every 6 hours.
-Left over from before:
+LAVIAC answers the Zitadel actions itself: its claims webhook ([Token claims](#token-claims)),
+whose target it keeps on every instance and syncs at startup and every 6 hours (see its
+`example.env`). Left over from before:
 
 - [actions/claims](actions/claims/README.md) (**deprecated**): the same claims as a PHP script on
-  a separate web server, still used by `auth.leicraftmc.de` until it is switched to LAVIAC.
+  a separate web server. Not deployed anymore: `auth.leicraftmc.de` runs on LAVIAC's webhook.
+
+### Token claims
+
+The webhook adds these claims to the ID token, the userinfo response and JWT access tokens, built
+from what Zitadel only sends in its own formats:
+
+| Claim | Value | When |
+| --- | --- | --- |
+| `urn:lcmc-auth:username` | The plain username (`alice`). `preferred_username` stays `alice@<org domain>`, because the domain policy "User login must be on domain" stays on. With it on, usernames are only unique within an org: two orgs can each have an `alice`. | The app requests the `profile` scope. |
+| `urn:lcmc-auth:roles` | The role keys in the app's own project as a list (`["devops", "infra-admin"]`), from Zitadel's `urn:zitadel:iam:org:project:roles`. | Zitadel sends roles: the project has "Assert roles on authentication" on, or the app asks for them by scope. |
+| `urn:lcmc-auth:project-roles` | `<project id>:<role key>` for every project whose roles Zitadel sends (`["395838505755869195:devops", "400000000000000001:superadmin"]`), from Zitadel's `urn:zitadel:iam:org:project:<id>:roles`. | As above. Other projects only when the app asks for them (see below). |
+
+Zitadel doesn't send the requested scopes to actions. The webhook goes by what Zitadel already put
+in the userinfo: `preferred_username` only with `profile`, the roles claims only when roles are
+asserted or requested. Apps that read claims from the ID token, not from the userinfo endpoint,
+need "User Info inside ID Token" (for the username) and "User roles inside ID Token" (for the
+roles) on.
+
+Why the claims look like this:
+
+- **Namespaced names.** Zitadel drops an action's claim when it has already set that key, and
+  keeps names to itself: everything under `urn:zitadel:iam`, and from v5 (on Zitadel's main
+  branch, not in v4.20.0) `groups`, filled with the names of Zitadel's user groups. Any org admin
+  can create such a group, under any name.
+- **Projects kept apart.** The same role key can mean different things in two projects, so
+  `roles` holds the app's own project only, and `project-roles` names the project in every entry.
+  Project ids are digits, so the first `:` ends the id, whatever the role key holds. Plain and
+  qualified entries never share a claim, so no role key can pass for another project's role.
+
+Configuring apps; most only need `urn:lcmc-auth:roles`:
+
+- **Termix:** Group Claim `urn:lcmc-auth:roles`, Admin Group `<role key>`.
+- **Grafana:** `groups_attribute_path = "urn:lcmc-auth:roles"[*]` and
+  `role_attribute_path = contains("urn:lcmc-auth:roles"[*], '<role key>') && 'Admin' || 'Viewer'`.
+  JMESPath needs the claim name in double quotes. Keep the `[*]`: `grafana.ini` strips quotes
+  around a whole value.
+- **Portainer Business Edition:** team claim `urn:lcmc-auth:roles`.
+
+For roles from another project, for example a super admin role, the app requests the scopes
+`urn:zitadel:iam:org:projects:roles` and `urn:zitadel:iam:org:project:id:<project id>:aud`, and
+checks `urn:lcmc-auth:project-roles` for `<project id>:<role key>`. In Grafana:
+
+```
+(contains("urn:lcmc-auth:roles"[*], 'grafana-admin') || contains("urn:lcmc-auth:project-roles"[*], '<project id>:superadmin')) && 'Admin' || 'Viewer'
+```
+
+To accept only roles granted by one org (not through a project grant to another org), the app
+also requests `urn:zitadel:iam:org:roles:id:<org id>`; Zitadel then sends only those.
+
+Where an app makes the username its account key (Portainer's "User identifier", for example),
+use `sub` instead, or let only one org's users in with the scope `urn:zitadel:iam:org:id:<org id>`.
 
 ## Updating
 
