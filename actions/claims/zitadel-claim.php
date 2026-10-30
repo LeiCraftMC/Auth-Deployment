@@ -75,11 +75,12 @@ if (is_array($own) && $own) {
 	$claims[] = ['key' => 'urn:lcmc-auth:roles', 'value' => $roles];
 }
 
-// project-roles: every project, with its id. Project ids are digits, so the first ":" ends the id
-// whatever the role key holds.
+// project-roles: every project, with its id. Zitadel allows any character in a role key, but the
+// id comes first and never holds a ":", so the first ":" ends it. A project with a custom id that
+// contains a ":" is left out, as it could not be told apart.
 $projectRoles = [];
 foreach ($userinfo as $claim => $value) {
-	if (is_array($value) && preg_match('/^urn:zitadel:iam:org:project:(\d+):roles$/', (string) $claim, $m)) {
+	if (is_array($value) && preg_match('/^urn:zitadel:iam:org:project:([^:]+):roles$/', (string) $claim, $m)) {
 		foreach (array_keys($value) as $role) {
 			$projectRoles[] = $m[1] . ':' . $role;
 		}

@@ -100,8 +100,15 @@ Why the claims look like this:
   can create such a group, under any name.
 - **Projects kept apart.** The same role key can mean different things in two projects, so
   `roles` holds the app's own project only, and `project-roles` names the project in every entry.
-  Project ids are digits, so the first `:` ends the id, whatever the role key holds. Plain and
-  qualified entries never share a claim, so no role key can pass for another project's role.
+  Plain and qualified entries never share a claim, so no role key can pass for another project's
+  role.
+- **The project id is the separator's guarantee.** Zitadel allows any character in a role key
+  (`:`, `/`, `|`, spaces, anything up to 200 characters), so no separator character is safe on
+  its own. The project id is: it comes first and never holds a `:` (Zitadel's own ids are digits),
+  so the first `:` ends it, whatever the role key holds. `395838505755869195:termix:admin` is the
+  role `termix:admin`. Apps compare whole entries, or match a project with the prefix
+  `<project id>:`, which can't match another project. A project created with a custom id that
+  contains a `:` (the v2 API allows that) is left out of `project-roles`.
 
 Configuring apps; most only need `urn:lcmc-auth:roles`:
 
